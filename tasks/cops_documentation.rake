@@ -85,9 +85,10 @@ task generate_cops_documentation: :yard do
       content << print_cop_with_doc(cop, config)
     end
     file_name = "#{Dir.pwd}/manual/cops_#{type}.md"
-    file = File.open(file_name, 'w')
-    puts "* generated #{file_name}"
-    file.write(content)
+    File.open(file_name, 'w') do |file|
+      puts "* generated #{file_name}"
+      file.write(content)
+    end
   end
 
   def print_cop_with_doc(cop, config)
@@ -106,7 +107,7 @@ task generate_cops_documentation: :yard do
 
   def assert_manual_synchronized
     # Do not print diff and yield whether exit code was zero
-    sh('git diff --quiet manual') do |outcome, _|
+    sh('git diff --exit-code manual') do |outcome, _|
       return if outcome
 
       # Output diff before raising error
