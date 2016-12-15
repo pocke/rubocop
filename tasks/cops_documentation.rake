@@ -89,7 +89,6 @@ task generate_cops_documentation: :yard do
       puts "* generated #{file_name}"
       file.write(content)
     end
-    sleep 1
   end
 
   def print_cop_with_doc(cop, config)
@@ -108,7 +107,7 @@ task generate_cops_documentation: :yard do
 
   def assert_manual_synchronized
     # Do not print diff and yield whether exit code was zero
-    sh('git diff --quiet manual') do |outcome, _|
+    sh('git diff --exit-code manual') do |outcome, _|
       return if outcome
 
       # Output diff before raising error
