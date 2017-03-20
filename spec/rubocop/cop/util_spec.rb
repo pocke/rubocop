@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Util do
   class TestUtil
     include RuboCop::Cop::Util
@@ -101,13 +99,21 @@ describe RuboCop::Cop::Util do
     end
   end
 
-  # Test compatibility with Range#size in Ruby 2.0.
-  describe '#numeric_range_size' do
-    if RUBY_VERSION >= '2'
-      [1..1, 1...1, 1..2, 1...2, 1..3, 1...3, 1..-1, 1...-1].each do |range|
-        context "with range #{range}" do
-          subject { described_class.numeric_range_size(range) }
-          it { is_expected.to eq(range.size) }
+  describe '#to_symbol_literal' do
+    [
+      ['foo', ':foo'],
+      ['foo?', ':foo?'],
+      ['foo!', ':foo!'],
+      ['@foo', ':@foo'],
+      ['@@foo', ':@@foo'],
+      ['$\\', ':$\\'],
+      ['$a', ':$a'],
+      ['==', ':=='],
+      ['a-b', ":'a-b'"]
+    ].each do |string, expectation|
+      context "when #{string}" do
+        it "returns #{expectation}" do
+          expect(described_class.to_symbol_literal(string)).to eq(expectation)
         end
       end
     end

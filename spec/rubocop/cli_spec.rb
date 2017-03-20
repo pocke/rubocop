@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
 require 'timeout'
 
 describe RuboCop::CLI, :isolated_environment do
@@ -104,6 +103,9 @@ describe RuboCop::CLI, :isolated_environment do
     it 'reports an offense' do
       create_file('example.rb', ["x = 0\r",
                                  "puts x\r"])
+      # Make Style/EndOfLine give same output regardless of platform.
+      create_file('.rubocop.yml', ['Style/EndOfLine:',
+                                   '  EnforcedStyle: lf'])
       result = cli.run(['--format', 'simple', 'example.rb'])
       expect(result).to eq(1)
       expect($stdout.string)
@@ -128,6 +130,7 @@ describe RuboCop::CLI, :isolated_environment do
     context 'when super is used with a block' do
       it 'still returns 0' do
         create_file('example.rb', ['# frozen_string_literal: true',
+                                   '',
                                    '# this is a class',
                                    'class Thing',
                                    '  def super_with_block',
@@ -244,13 +247,15 @@ describe RuboCop::CLI, :isolated_environment do
                                      '  EnforcedStyle: always'])
         expect(cli.run(['--format', 'offenses', '-a', 'example.rb'])).to eq(0)
         expect($stdout.string).to eq(['',
+                                      '1  Style/EmptyLineAfterMagicComment',
                                       '1  Style/FrozenStringLiteralComment',
                                       '--',
-                                      '1  Total',
+                                      '2  Total',
                                       '',
                                       ''].join("\n"))
         expect(IO.read('example.rb'))
           .to eq(['# frozen_string_literal: true',
+                  '',
                   'a = 1 # rubocop:disable Lint/UselessAssignment',
                   ''].join("\n"))
       end
@@ -914,10 +919,10 @@ describe RuboCop::CLI, :isolated_environment do
     end
 
     it 'does not consider Include parameters in subdirectories' do
-      create_file('dir/example.ruby', 'x=0')
+      create_file('dir/example.ruby3', 'x=0')
       create_file('dir/.rubocop.yml', ['AllCops:',
                                        '  Include:',
-                                       '    - "*.ruby"'])
+                                       '    - "*.ruby3"'])
       expect(cli.run(%w(--format simple))).to eq(0)
       expect($stderr.string).to eq('')
       expect($stdout.string)
@@ -1431,26 +1436,6 @@ describe RuboCop::CLI, :isolated_environment do
            '2.0 and up, but the target Ruby version for your project is 1.9.',
            'Please disable this cop or adjust the `TargetRubyVersion` ' \
            'parameter in your configuration.'].join("\n")
-        )
-      end
-    end
-
-    context 'when set to 1.9 and Style/SymbolArray is using percent style' do
-      it 'fails with an error message' do
-        create_file('example1.rb', "puts 'hello'")
-        create_file('.rubocop.yml', ['AllCops:',
-                                     '  TargetRubyVersion: 1.9',
-                                     'Style/SymbolArray:',
-                                     '  EnforcedStyle: percent',
-                                     '  Enabled: true'])
-        expect(cli.run(['example1.rb'])).to eq(2)
-        expect($stderr.string.strip).to eq(
-          ['Error: The default `percent` style for the `Style/SymbolArray` ' \
-           'cop is only compatible with Ruby 2.0 and up, but the target Ruby' \
-           ' version for your project is 1.9.',
-           'Please either disable this cop, configure it to use `array` ' \
-           'style, or adjust the `TargetRubyVersion` parameter in your ' \
-           'configuration.'].join("\n")
         )
       end
     end

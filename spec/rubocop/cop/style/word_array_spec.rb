@@ -1,10 +1,12 @@
-# encoding: utf-8
 # frozen_string_literal: true
-
-require 'spec_helper'
 
 describe RuboCop::Cop::Style::WordArray, :config do
   subject(:cop) { described_class.new(config) }
+
+  before(:each) do
+    # Reset data which is shared by all instances of WordArray
+    described_class.largest_brackets = -Float::INFINITY
+  end
 
   context 'when EnforcedStyle is percent' do
     let(:cop_config) do
@@ -139,6 +141,20 @@ describe RuboCop::Cop::Style::WordArray, :config do
       expect(cop.messages).to eq(['Use `%w` or `%W` for an array of words.'])
       expect(cop.config_to_allow_offenses).to eq('Enabled' => false)
     end
+
+    it "doesn't fail in wacky ways when multiple cop instances are used" do
+      # Regression test for GH issue #2740
+      cop1 = described_class.new(config)
+      cop2 = described_class.new(config)
+      RuboCop::Formatter::DisabledConfigFormatter.config_to_allow_offenses = {}
+      RuboCop::Formatter::DisabledConfigFormatter.detected_styles = {}
+      # Don't use `inspect_source`; it resets `config_to_allow_offenses` each
+      #   time, which suppresses the bug we are checking for
+      _investigate(cop1, parse_source("['g', 'h']"))
+      _investigate(cop2, parse_source('%w(a b c)'))
+      expect(cop2.config_to_allow_offenses).to eq('EnforcedStyle' => 'percent',
+                                                  'MinSize' => 3)
+    end
   end
 
   context 'when EnforcedStyle is array' do
@@ -205,6 +221,14 @@ describe RuboCop::Cop::Style::WordArray, :config do
     it 'auto-corrects an array of email addresses' do
       new_source = autocorrect_source(cop, "['a@example.com', 'b@example.com']")
       expect(new_source).to eq('%w(a@example.com b@example.com)')
+    end
+  end
+
+  context 'when the WordRegex configuration is not a Regexp' do
+    let(:cop_config) { { 'WordRegex' => 'just_a_string' } }
+
+    it 'still parses the code without raising an error' do
+      expect { inspect_source(cop, '') }.to_not raise_error
     end
   end
 

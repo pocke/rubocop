@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 RSpec.describe RuboCop::MagicComment do
   shared_examples 'magic comment' do |comment, expectations = {}|
     encoding = expectations[:encoding]
@@ -22,6 +20,14 @@ RSpec.describe RuboCop::MagicComment do
 
   include_examples 'magic comment',
                    '# encoding: utf-8',
+                   encoding: 'utf-8'
+
+  include_examples 'magic comment',
+                   '# ENCODING: utf-8',
+                   encoding: 'utf-8'
+
+  include_examples 'magic comment',
+                   '# eNcOdInG: utf-8',
                    encoding: 'utf-8'
 
   include_examples 'magic comment',
@@ -46,6 +52,18 @@ RSpec.describe RuboCop::MagicComment do
   include_examples 'magic comment',
                    '# frozen_string_literal: false',
                    frozen_string_literal: false
+
+  include_examples 'magic comment',
+                   '# frozen-string-literal: true',
+                   frozen_string_literal: true
+
+  include_examples 'magic comment',
+                   '# FROZEN-STRING-LITERAL: true',
+                   frozen_string_literal: true
+
+  include_examples 'magic comment',
+                   '# fRoZeN-sTrInG_lItErAl: true',
+                   frozen_string_literal: true
 
   include_examples 'magic comment',
                    '# frozen_string_literal: invalid',

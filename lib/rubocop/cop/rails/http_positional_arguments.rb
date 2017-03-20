@@ -5,9 +5,10 @@ module RuboCop
     module Rails
       # This cop is used to identify usages of http methods like `get`, `post`,
       # `put`, `patch` without the usage of keyword arguments in your tests and
-      # change them to use keyword args.  This cop only applies to Rails >= 5
-      # If you are not running Rails >=5 you should disable
-      # the Rails/HttpPositionalArguments cop.
+      # change them to use keyword args.  This cop only applies to Rails >= 5 .
+      # If you are not running Rails < 5 you should disable # the
+      # Rails/HttpPositionalArguments cop or set your TargetRailsVersion in your
+      # .rubocop.yml file to 4.0, etc.
       #
       # @example
       #   # bad
@@ -16,12 +17,16 @@ module RuboCop
       #   # good
       #   get :new, params: { user_id: 1 }
       class HttpPositionalArguments < Cop
+        extend TargetRailsVersion
+
         MSG = 'Use keyword arguments instead of ' \
               'positional arguments for http call: `%s`.'.freeze
-        KEYWORD_ARGS = [
-          :headers, :env, :params, :body, :flash, :as, :xhr, :session, :method
-        ].freeze
-        HTTP_METHODS = [:get, :post, :put, :patch, :delete, :head].freeze
+        KEYWORD_ARGS = %i(
+          headers env params body flash as xhr session method
+        ).freeze
+        HTTP_METHODS = %i(get post put patch delete head).freeze
+
+        minimum_target_rails_version 5.0
 
         def_node_matcher :http_request?, <<-END
           (send nil {#{HTTP_METHODS.map(&:inspect).join(' ')}} !nil $_data ...)
@@ -82,7 +87,8 @@ module RuboCop
         # the data is the http parameters and environment sent in
         # the Rails 5 http call
         def autocorrect(node)
-          _receiver, http_method, http_path, *data = *node
+          http_path, *data = *node.arguments
+
           controller_action = http_path.source
           params = convert_hash_data(data.first, 'params')
           headers = convert_hash_data(data.last, 'headers') if data.size > 1
@@ -90,7 +96,7 @@ module RuboCop
           code_to_replace = node.loc.expression
           # what to replace with
           format = parentheses?(node) ? '%s(%s%s%s)' : '%s %s%s%s'
-          new_code = format(format, http_method, controller_action,
+          new_code = format(format, node.method_name, controller_action,
                             params, headers)
           ->(corrector) { corrector.replace(code_to_replace, new_code) }
         end

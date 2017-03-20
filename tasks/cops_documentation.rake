@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'yard'
 require 'rubocop'
 
@@ -63,16 +64,15 @@ task generate_cops_documentation: :yard do
     content << "Attribute | Value\n"
     content << "--- | ---\n"
     pars.each do |par|
-      content << "#{par.first} | #{format_table_value(par.last)}\n"
+      content << "#{par.first} |#{format_table_value(par.last)}\n"
     end
-    content << "\n"
     content
   end
 
   def format_table_value(v)
     value = v.is_a?(Array) ? v.join(', ') : v.to_s
-    value.gsub("#{Dir.pwd}/", '')
-         .gsub('*', '\*')
+    value = value.gsub("#{Dir.pwd}/", '').gsub('*', '\*')
+    " #{value}".rstrip
   end
 
   def references(config, cop)
@@ -93,9 +93,12 @@ task generate_cops_documentation: :yard do
       content << print_cop_with_doc(cop, config)
     end
     file_name = "#{Dir.pwd}/manual/cops_#{department.downcase}.md"
-    file = File.open(file_name, 'w')
-    puts "* generated #{file_name}"
-    file.write(content)
+    File.open(file_name, 'w') do |file|
+      puts "* generated #{file_name}"
+      file.write(content.strip + "\n")
+      file.sync
+      file.close
+    end
   end
 
   def print_cop_with_doc(cop, config)
@@ -173,5 +176,5 @@ task generate_cops_documentation: :yard do
 
   print_table_of_contents(cops)
 
-  assert_manual_synchronized if ENV['CI'] == 'true'
+  assert_manual_synchronized
 end

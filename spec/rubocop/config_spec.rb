@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Config do
   include FileHelper
 
@@ -524,6 +522,37 @@ describe RuboCop::Config do
       it 'enables the cop by default' do
         cop_class = RuboCop::Cop::Style::TrailingWhitespace
         expect(configuration.cop_enabled?(cop_class)).to be true
+      end
+    end
+  end
+
+  describe '#target_rails_version' do
+    context 'when TargetRailsVersion is set' do
+      let(:rails_version) { 4.0 }
+
+      let(:hash) do
+        {
+          'AllCops' => {
+            'TargetRailsVersion' => rails_version
+          }
+        }
+      end
+
+      it 'uses TargetRailsVersion' do
+        expect(configuration.target_rails_version).to eq rails_version
+      end
+    end
+
+    context 'when TargetRailsVersion is not set' do
+      let(:hash) do
+        {
+          'AllCops' => {}
+        }
+      end
+
+      it 'uses the default rails version' do
+        default_version = RuboCop::Config::DEFAULT_RAILS_VERSION
+        expect(configuration.target_rails_version).to eq default_version
       end
     end
   end

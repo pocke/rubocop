@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Metrics::ParameterLists, :config do
   subject(:cop) { described_class.new(config) }
   let(:cop_config) do
@@ -15,6 +13,9 @@ describe RuboCop::Cop::Metrics::ParameterLists, :config do
     inspect_source(cop, ['def meth(a, b, c, d, e)',
                          'end'])
     expect(cop.offenses.size).to eq(1)
+    expect(cop.messages).to eq(
+      ['Avoid parameter lists longer than 4 parameters. [5/4]']
+    )
     expect(cop.config_to_allow_offenses).to eq('Max' => 5)
   end
 
@@ -28,6 +29,9 @@ describe RuboCop::Cop::Metrics::ParameterLists, :config do
     it 'counts keyword arguments as well' do
       inspect_source(cop, ['def meth(a, b, c, d: 1, e: 2)',
                            'end'])
+      expect(cop.messages).to eq(
+        ['Avoid parameter lists longer than 4 parameters. [5/4]']
+      )
       expect(cop.offenses.size).to eq(1)
     end
   end

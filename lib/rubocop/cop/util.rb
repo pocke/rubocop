@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/ModuleLength
 
+# rubocop:disable Metrics/ModuleLength
 module RuboCop
   module Cop
     # This module contains a collection of useful utility methods.
@@ -10,14 +10,14 @@ module RuboCop
 
       BYTE_ORDER_MARK = 0xfeff # The Unicode codepoint
 
-      EQUALS_ASGN_NODES = [:lvasgn, :ivasgn, :cvasgn, :gvasgn,
-                           :casgn, :masgn].freeze
-      SHORTHAND_ASGN_NODES = [:op_asgn, :or_asgn, :and_asgn].freeze
+      EQUALS_ASGN_NODES = %i(lvasgn ivasgn cvasgn gvasgn
+                             casgn masgn).freeze
+      SHORTHAND_ASGN_NODES = %i(op_asgn or_asgn and_asgn).freeze
       ASGN_NODES = (EQUALS_ASGN_NODES + SHORTHAND_ASGN_NODES).freeze
 
-      MODIFIER_NODES = [:if, :while, :until].freeze
+      MODIFIER_NODES = %i(if while until).freeze
       CONDITIONAL_NODES = (MODIFIER_NODES + [:case]).freeze
-      LOGICAL_OPERATOR_NODES = [:and, :or].freeze
+      LOGICAL_OPERATOR_NODES = %i(and or).freeze
 
       # http://phrogz.net/programmingruby/language.html#table_18.4
       # Backtick is added last just to help editors parse this code.
@@ -90,7 +90,7 @@ module RuboCop
       def source_range(source_buffer, line_number, column, length = 1)
         if column.is_a?(Range)
           column_index = column.begin
-          length = numeric_range_size(column)
+          length = column.size
         else
           column_index = column
         end
@@ -199,14 +199,6 @@ module RuboCop
         node
       end
 
-      # Range#size is not available prior to Ruby 2.0.
-      def numeric_range_size(range)
-        size = range.end - range.begin
-        size += 1 unless range.exclude_end?
-        size = 0 if size < 0
-        size
-      end
-
       # If converting a string to Ruby string literal source code, must
       # double quotes be used?
       def double_quotes_required?(string)
@@ -217,16 +209,6 @@ module RuboCop
         # Regex matches IF there is a ' or there is a \\ in the string that is
         # not preceded/followed by another \\ (e.g. "\\x34") but not "\\\\".
         string =~ /'|(?<! \\) \\{2}* \\ (?![\\"])/x
-      end
-
-      # If double quoted string literals are found in Ruby code, and they are
-      # not the preferred style, should they be flagged?
-      def double_quotes_acceptable?(string)
-        needs_escaping?(string) || hard_to_type?(string)
-      end
-
-      def hard_to_type?(string)
-        string.codepoints.any? { |cp| cp < 32 || cp > 126 }
       end
 
       def needs_escaping?(string)
@@ -246,7 +228,32 @@ module RuboCop
       end
 
       def to_symbol_literal(string)
-        ":#{string.to_sym}"
+        if symbol_without_quote?(string)
+          ":#{string}"
+        else
+          ":#{to_string_literal(string)}"
+        end
+      end
+
+      def symbol_without_quote?(string)
+        special_gvars = %w(
+          $! $" $$ $& $' $* $+ $, $/ $; $: $. $< $= $> $? $@ $\\ $_ $` $~ $0
+          $-0 $-F $-I $-K $-W $-a $-d $-i $-l $-p $-v $-w
+        )
+        redefinable_operators = %w(
+          | ^ & <=> == === =~ > >= < <= << >>
+          + - * / % ** ~ +@ -@ [] []= ` ! != !~
+        )
+
+        # method name
+        string =~ /\A[a-zA-Z_]\w*[!?]?\z/ ||
+          # instance / class variable
+          string =~ /\A\@\@?[a-zA-Z_]\w*\z/ ||
+          # global variable
+          string =~ /\A\$[1-9]\d*\z/ ||
+          string =~ /\A\$[a-zA-Z_]\w*\z/ ||
+          special_gvars.include?(string) ||
+          redefinable_operators.include?(string)
       end
 
       def interpret_string_escapes(string)

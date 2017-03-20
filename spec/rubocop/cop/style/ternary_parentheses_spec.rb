@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::TernaryParentheses, :config do
   subject(:cop) { described_class.new(config) }
 
@@ -79,6 +77,10 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code with offense',
                       'foo = yield ? a : b',
                       'foo = (yield) ? a : b'
+
+      it_behaves_like 'code with offense',
+                      'foo = bar[:baz] ? a : b',
+                      'foo = (bar[:baz]) ? a : b'
     end
 
     context 'with a complex condition' do
@@ -134,6 +136,10 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code with offense',
                       'foo = (yield) ? a : b',
                       'foo = yield ? a : b'
+
+      it_behaves_like 'code with offense',
+                      'foo = (bar[:baz]) ? a : b',
+                      'foo = bar[:baz] ? a : b'
     end
 
     context 'with a complex condition' do
@@ -195,6 +201,12 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code without offense',
                       '(foo..bar).include?(baz) ? a : b'
     end
+
+    context 'with no space between the parentheses and question mark' do
+      it_behaves_like 'code with offense',
+                      '(foo)? a : b',
+                      'foo ? a : b'
+    end
   end
 
   context 'configured for parentheses on complex and there are parens' do
@@ -214,6 +226,10 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code with offense',
                       'foo = (yield) ? a : b',
                       'foo = yield ? a : b'
+
+      it_behaves_like 'code with offense',
+                      'foo = (bar[:baz]) ? a : b',
+                      'foo = bar[:baz] ? a : b'
     end
 
     context 'with a complex condition' do

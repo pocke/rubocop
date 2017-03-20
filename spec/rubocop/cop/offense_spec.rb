@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Offense do
   let(:location) do
     source_buffer = Parser::Source::Buffer.new('test', 1)
@@ -44,7 +42,7 @@ describe RuboCop::Cop::Offense do
     expect(offense).to be_frozen
   end
 
-  [:severity, :location, :message, :cop_name].each do |a|
+  %i(severity location message cop_name).each do |a|
     describe "##{a}" do
       it 'is frozen' do
         expect(offense.send(a)).to be_frozen

@@ -46,9 +46,13 @@ module RuboCop
         MSG = 'Empty `ensure` block detected.'.freeze
 
         def on_ensure(node)
-          _body, ensure_body = *node
+          add_offense(node, :keyword) unless node.body
+        end
 
-          add_offense(node, :keyword) unless ensure_body
+        def autocorrect(node)
+          lambda do |corrector|
+            corrector.remove(node.loc.keyword)
+          end
         end
       end
     end

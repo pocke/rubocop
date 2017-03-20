@@ -1,5 +1,30 @@
 # Lint
 
+## Lint/AmbiguousBlockAssociation
+
+Enabled by default | Supports autocorrection
+--- | ---
+Enabled | No
+
+This cop checks for ambiguous block association with method
+when param passed without parentheses.
+
+### Example
+
+```ruby
+# bad
+some_method a { |val| puts val }
+```
+```ruby
+# good
+# With parentheses, there's no ambiguity.
+some_method(a) { |val| puts val }
+```
+
+### References
+
+* [https://github.com/bbatsov/ruby-style-guide#syntax](https://github.com/bbatsov/ruby-style-guide#syntax)
+
 ## Lint/AmbiguousOperator
 
 Enabled by default | Supports autocorrection
@@ -87,7 +112,6 @@ Attribute | Value
 --- | ---
 AllowSafeAssignment | true
 
-
 ### References
 
 * [https://github.com/bbatsov/ruby-style-guide#safe-assignment-in-condition](https://github.com/bbatsov/ruby-style-guide#safe-assignment-in-condition)
@@ -159,7 +183,6 @@ Attribute | Value
 --- | ---
 EnforcedStyleAlignWith | either
 SupportedStylesAlignWith | either, start_of_block, start_of_line
-
 
 ## Lint/CircularArgumentReference
 
@@ -325,7 +348,6 @@ EnforcedStyleAlignWith | start_of_line
 SupportedStylesAlignWith | start_of_line, def
 AutoCorrect | false
 
-
 ## Lint/DeprecatedClassMethods
 
 Enabled by default | Supports autocorrection
@@ -372,7 +394,7 @@ end
 # good
 
 case x
-when 'first
+when 'first'
   do_something
 when 'second'
   do_something_else
@@ -498,7 +520,7 @@ end
 
 Enabled by default | Supports autocorrection
 --- | ---
-Enabled | No
+Enabled | Yes
 
 This cop checks for empty `ensure` blocks
 
@@ -538,6 +560,12 @@ ensure
   do_something_else
 end
 ```
+
+### Important attributes
+
+Attribute | Value
+--- | ---
+AutoCorrect | false
 
 ## Lint/EmptyExpression
 
@@ -674,7 +702,6 @@ Attribute | Value
 EnforcedStyleAlignWith | keyword
 SupportedStylesAlignWith | keyword, variable, start_of_line
 AutoCorrect | false
-
 
 ## Lint/EndInMethod
 
@@ -953,7 +980,6 @@ Attribute | Value
 --- | ---
 EnforcedStyle | runtime_error
 SupportedStyles | runtime_error, standard_error
-
 
 ## Lint/InvalidCharacterLiteral
 
@@ -1421,7 +1447,6 @@ Attribute | Value
 --- | ---
 Whitelist | present?, blank?, presence, try
 
-
 ## Lint/ShadowedException
 
 Enabled by default | Supports autocorrection
@@ -1683,21 +1708,6 @@ This cop checks for unused block arguments.
 ### Example
 
 ```ruby
-#good
-
-do_something do |used, unused|
-  puts used
-end
-
-do_something do
-  puts :foo
-end
-
-define_method(:foo) do |_bar|
-  puts :baz
-end
-```
-```ruby
 # bad
 
 do_something do |used, _unused|
@@ -1712,6 +1722,21 @@ define_method(:foo) do |bar|
   puts :baz
 end
 ```
+```ruby
+#good
+
+do_something do |used, unused|
+  puts used
+end
+
+do_something do
+  puts :foo
+end
+
+define_method(:foo) do |_bar|
+  puts :baz
+end
+```
 
 ### Important attributes
 
@@ -1719,7 +1744,6 @@ Attribute | Value
 --- | ---
 IgnoreEmptyBlocks | true
 AllowUnusedKeywordArguments | false
-
 
 ### References
 
@@ -1756,7 +1780,6 @@ Attribute | Value
 --- | ---
 AllowUnusedKeywordArguments | false
 IgnoreEmptyMethods | true
-
 
 ### References
 
@@ -1861,9 +1884,8 @@ end
 
 Attribute | Value
 --- | ---
-ContextCreatingMethods | 
-MethodCreatingMethods | 
-
+ContextCreatingMethods |
+MethodCreatingMethods |
 
 ## Lint/UselessAssignment
 

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::SpaceInsideHashLiteralBraces, :config do
   subject(:cop) { described_class.new(config) }
   let(:cop_config) { { 'EnforcedStyle' => 'space' } }
@@ -211,6 +209,14 @@ describe RuboCop::Cop::Style::SpaceInsideHashLiteralBraces, :config do
     # regression test; see GH issue 2436
     it 'does not register an offense' do
       inspect_source(cop, 'Hash[{ x: 1 } => [1]]')
+      expect(cop.offenses).to be_empty
+    end
+  end
+
+  context 'on { key: "{" }' do
+    # regression test; see GH issue 3958
+    it 'does not register an offense' do
+      inspect_source(cop, '{ key: "{" }')
       expect(cop.offenses).to be_empty
     end
   end

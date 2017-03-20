@@ -1,7 +1,4 @@
-# encoding: utf-8
 # frozen_string_literal: true
-
-require 'spec_helper'
 
 describe RuboCop::ConfigLoader do
   include FileHelper
@@ -510,6 +507,13 @@ describe RuboCop::ConfigLoader do
       )
     end
 
+    it 'changes target ruby version with a patch to float' do
+      create_file(configuration_path, ['AllCops:',
+                                       '  TargetRubyVersion: 2.3.4'])
+
+      expect(load_file.to_h).to eq('AllCops' => { 'TargetRubyVersion' => 2.3 })
+    end
+
     it 'loads configuration properly when it includes non-ascii characters ' do
       create_file(configuration_path, ['# All these cops of mine are ❤',
                                        'Style/Encoding:',
@@ -593,41 +597,27 @@ describe RuboCop::ConfigLoader do
     end
   end
 
-  describe 'configuration for SymbolArray', :isolated_environment do
+  describe 'configuration for CharacterLiteral', :isolated_environment do
+    let(:dir_path) { 'test/blargh' }
+
     let(:config) do
-      config_path = described_class.configuration_file_for('.')
+      config_path = described_class.configuration_file_for(dir_path)
       described_class.configuration_from_file(config_path)
     end
 
-    context 'when no config file exists for the target file' do
-      it 'is disabled' do
-        expect(
-          config.cop_enabled?(RuboCop::Cop::Style::SymbolArray)
-        ).to be_falsey
+    context 'when .rubocop.yml inherits from a file with a name starting ' \
+            'with .rubocop' do
+      before do
+        create_file('test/.rubocop_rules.yml', ['Style/CharacterLiteral:',
+                                                '  Exclude:',
+                                                '    - blargh/blah.rb'])
+        create_file('test/.rubocop.yml', 'inherit_from: .rubocop_rules.yml')
       end
-    end
 
-    context 'when a config file which does not mention SymbolArray exists' do
-      it 'is disabled' do
-        create_file('.rubocop.yml', [
-                      'Metrics/LineLength:',
-                      '  Max: 80'
-                    ])
-        expect(
-          config.cop_enabled?(RuboCop::Cop::Style::SymbolArray)
-        ).to be_falsey
-      end
-    end
-
-    context 'when a config file which explicitly enables SymbolArray exists' do
-      it 'is enabled' do
-        create_file('.rubocop.yml', [
-                      'Style/SymbolArray:',
-                      '  Enabled: true'
-                    ])
-        expect(
-          config.cop_enabled?(RuboCop::Cop::Style::SymbolArray)
-        ).to be_truthy
+      it 'gets an Exclude relative to the inherited file converted to ' \
+         'absolute' do
+        expect(config.for_cop(RuboCop::Cop::Style::CharacterLiteral)['Exclude'])
+          .to eq([File.join(Dir.pwd, 'test/blargh/blah.rb')])
       end
     end
   end

@@ -9,9 +9,33 @@ module RuboCop
       # Alternatively, it checks for symbol arrays using the %i() syntax on
       # projects which do not want to use that syntax, perhaps because they
       # support a version of Ruby lower than 2.0.
+      #
+      # @example
+      #
+      # # EnforcedStyle: percent (default)
+      #
+      # # good
+      # %i[foo bar baz]
+      #
+      # # bad
+      # [:foo, :bar, :baz]
+      #
+      # @example
+      #
+      # # EnforcedStyle: brackets
+      #
+      # # good
+      # [:foo, :bar, :baz]
+      #
+      # # bad
+      # %i[foo bar baz]
       class SymbolArray < Cop
         include ConfigurableEnforcedStyle
         include ArraySyntax
+        include PercentLiteral
+        extend TargetRubyVersion
+
+        minimum_target_ruby_version 2.0
 
         PERCENT_MSG = 'Use `%i` or `%I` for an array of symbols.'.freeze
         ARRAY_MSG = 'Use `[]` for an array of symbols.'.freeze
@@ -22,19 +46,6 @@ module RuboCop
           elsif node.percent_literal?(:symbol)
             check_percent_array(node)
           end
-        end
-
-        def validate_config
-          return unless style == :percent && target_ruby_version < 2.0
-
-          raise ValidationError, 'The default `percent` style for the ' \
-                                '`Style/SymbolArray` cop is only compatible' \
-                                ' with Ruby 2.0 and up, but the target Ruby' \
-                                " version for your project is 1.9.\nPlease " \
-                                'either disable this cop, configure it to ' \
-                                'use `array` style, or adjust the ' \
-                                '`TargetRubyVersion` parameter in your ' \
-                                'configuration.'
         end
 
         private
@@ -69,32 +80,19 @@ module RuboCop
         end
 
         def autocorrect(node)
-          syms = node.children.map { |c| c.children[0].to_s }
-          corrected = if style == :percent
-                        percent_replacement(syms)
-                      else
-                        bracket_replacement(syms)
-                      end
+          if style == :percent
+            correct_percent(node, 'i')
+          else
+            correct_bracketed(node)
+          end
+        end
+
+        def correct_bracketed(node)
+          syms = node.children.map { |c| to_symbol_literal(c.children[0].to_s) }
 
           lambda do |corrector|
-            corrector.replace(node.source_range, corrected)
+            corrector.replace(node.source_range, "[#{syms.join(', ')}]")
           end
-        end
-
-        def percent_replacement(syms)
-          escape = syms.any? { |s| needs_escaping?(s) }
-          syms = syms.map { |s| escape_string(s) } if escape
-          syms = syms.map { |s| s.gsub(/\)/, '\\)') }
-          if escape
-            "%I(#{syms.join(' ')})"
-          else
-            "%i(#{syms.join(' ')})"
-          end
-        end
-
-        def bracket_replacement(syms)
-          syms = syms.map { |s| to_symbol_literal(s) }
-          "[#{syms.join(', ')}]"
         end
       end
     end

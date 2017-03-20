@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::CLI, :isolated_environment do
   include_context 'cli spec behavior'
 
@@ -226,7 +224,7 @@ describe RuboCop::CLI, :isolated_environment do
     expect(IO.read('example.rb')).to eq(corrected.join("\n"))
   end
 
-  [:line_count_based, :semantic, :braces_for_chaining].each do |style|
+  %i(line_count_based semantic braces_for_chaining).each do |style|
     context "when BlockDelimiters has #{style} style" do
       it 'corrects SpaceBeforeBlockBraces, SpaceInsideBlockBraces offenses' do
         source = ['r = foo.map{|a|',
@@ -307,7 +305,9 @@ describe RuboCop::CLI, :isolated_environment do
               '  # rubocop:disable Metrics/MethodLength',
               '  def func',
               '    x = foo # rubocop:disable Lint/UselessAssignment,Style/For',
-              '    bar',
+              '    # rubocop:disable all',
+              '    # rubocop:disable Style/ClassVars',
+              '    @@bar = "3"',
               '  end',
               'end',
               ''].join("\n")
@@ -319,13 +319,16 @@ describe RuboCop::CLI, :isolated_environment do
               'W:  2:  3: [Corrected] Unnecessary disabling of ' \
               'Metrics/MethodLength.',
               'W:  4: 54: [Corrected] Unnecessary disabling of Style/For.',
+              'W:  6:  5: [Corrected] Unnecessary disabling of ' \
+              'Style/ClassVars.',
               '',
-              '1 file inspected, 3 offenses detected, 2 offenses corrected',
+              '1 file inspected, 4 offenses detected, 3 offenses corrected',
               ''].join("\n"))
     corrected = ['class A',
                  '  def func',
                  '    x = foo # rubocop:disable Lint/UselessAssignment',
-                 '    bar',
+                 '    # rubocop:disable all',
+                 '    @@bar = "3"',
                  '  end',
                  'end',
                  '']
@@ -388,7 +391,6 @@ describe RuboCop::CLI, :isolated_environment do
                  '  BlockB do |_portfolio|',
                  '    foo',
                  '  end',
-                 '',
                  'rescue => e # some problem',
                  '  bar',
                  'end',
@@ -1024,6 +1026,22 @@ describe RuboCop::CLI, :isolated_environment do
     expect(IO.read('example.rb')).to eq(['{foo: bar,',
                                          ' bar: baz,}',
                                          'foo.each { bar; }',
+                                         ''].join("\n"))
+  end
+
+  it 'corrects BracesAroundHashParameters offenses leaving the ' \
+     'MultilineHashBraceLayout offense unchanged' do
+    create_file('example.rb', ['def method_a',
+                               '  do_something({ a: 1,',
+                               '  })',
+                               'end',
+                               ''])
+
+    expect($stderr.string).to eq('')
+    expect(cli.run(%w(--auto-correct))).to eq(0)
+    expect(IO.read('example.rb')).to eq(['def method_a',
+                                         '  do_something(a: 1)',
+                                         'end',
                                          ''].join("\n"))
   end
 end

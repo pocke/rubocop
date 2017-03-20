@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::RescueModifier do
   let(:config) do
     RuboCop::Config.new('Style/IndentationWidth' => {
@@ -17,6 +15,13 @@ describe RuboCop::Cop::Style::RescueModifier do
     expect(cop.messages)
       .to eq(['Avoid using `rescue` in its modifier form.'])
     expect(cop.highlights).to eq(['method rescue handle'])
+  end
+
+  it 'registers an offense for modifier rescue around parallel assignment' do
+    inspect_source(cop, 'a, b = 1, 2 rescue nil')
+
+    expect(cop.messages)
+      .to eq(['Avoid using `rescue` in its modifier form.'])
   end
 
   it 'handles more complex expression with modifier rescue' do

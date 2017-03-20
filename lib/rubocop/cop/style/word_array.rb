@@ -10,10 +10,16 @@ module RuboCop
       # which do not want to include that syntax.
       class WordArray < Cop
         include ArraySyntax
+        include ConfigurableEnforcedStyle
+        include PercentLiteral
 
         PERCENT_MSG = 'Use `%w` or `%W` for an array of words.'.freeze
         ARRAY_MSG = 'Use `[]` for an array of words.'.freeze
         QUESTION_MARK_SIZE = '?'.size
+
+        class << self
+          attr_accessor :largest_brackets
+        end
 
         def on_array(node)
           if bracketed_array_of?(:str, node)
@@ -25,7 +31,7 @@ module RuboCop
 
         def autocorrect(node)
           if style == :percent
-            correct_percent(node)
+            correct_percent(node, 'w')
           else
             correct_bracketed(node)
           end
@@ -68,27 +74,12 @@ module RuboCop
           end
         end
 
-        def style
-          cop_config['EnforcedStyle'].to_sym
-        end
-
         def min_size
           cop_config['MinSize']
         end
 
         def word_regex
-          cop_config['WordRegex']
-        end
-
-        def correct_percent(node)
-          words = node.children
-          escape = words.any? { |w| needs_escaping?(w.children[0]) }
-          char = escape ? 'W' : 'w'
-          contents = autocorrect_words(words, escape, node.loc.line)
-
-          lambda do |corrector|
-            corrector.replace(node.source_range, "%#{char}(#{contents})")
-          end
+          Regexp.new(cop_config['WordRegex'])
         end
 
         def correct_bracketed(node)
@@ -97,19 +88,6 @@ module RuboCop
           lambda do |corrector|
             corrector.replace(node.source_range, "[#{words.join(', ')}]")
           end
-        end
-
-        def autocorrect_words(word_nodes, escape, base_line_number)
-          previous_node_line_number = base_line_number
-          word_nodes.map do |node|
-            number_of_line_breaks = node.loc.line - previous_node_line_number
-            line_breaks = "\n" * number_of_line_breaks
-            previous_node_line_number = node.loc.line
-            content = node.children.first
-            content = escape ? escape_string(content) : content
-            content.gsub!(/\)/, '\\)')
-            line_breaks + content
-          end.join(' ')
         end
 
         def style_detected(style, ary_size)
@@ -132,13 +110,13 @@ module RuboCop
         end
 
         def largest_brackets_size(style, ary_size)
-          @largest_brackets ||= -Float::INFINITY
+          self.class.largest_brackets ||= -Float::INFINITY
 
-          if style == :brackets && ary_size > @largest_brackets
-            @largest_brackets = ary_size
+          if style == :brackets && ary_size > self.class.largest_brackets
+            self.class.largest_brackets = ary_size
           end
 
-          @largest_brackets
+          self.class.largest_brackets
         end
 
         def smallest_percent_size(style, ary_size)

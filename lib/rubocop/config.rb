@@ -18,6 +18,7 @@ module RuboCop
     # 2.1 is the oldest officially supported Ruby version.
     DEFAULT_RUBY_VERSION = 2.1
     KNOWN_RUBIES = [1.9, 2.0, 2.1, 2.2, 2.3, 2.4].freeze
+    DEFAULT_RAILS_VERSION = 5.0
     OBSOLETE_COPS = {
       'Style/TrailingComma' =>
         'The `Style/TrailingComma` cop no longer exists. Please use ' \
@@ -27,7 +28,7 @@ module RuboCop
         'The `Rails/DefaultScope` cop no longer exists.',
       'Style/SingleSpaceBeforeFirstArg' =>
         'The `Style/SingleSpaceBeforeFirstArg` cop has been renamed to ' \
-        '`Style/SpaceBeforeFirstArg.`',
+        '`Style/SpaceBeforeFirstArg`.',
       'Lint/SpaceBeforeFirstArg' =>
         'The `Lint/SpaceBeforeFirstArg` cop has been removed, since it was a ' \
         'duplicate of `Style/SpaceBeforeFirstArg`. Please use ' \
@@ -263,15 +264,14 @@ module RuboCop
       relative_path(path, base_dir_for_path_parameters)
     end
 
-    # Paths specified in .rubocop.yml and .rubocop_todo.yml files are relative
-    # to the directory where that file is. Paths in other config files are
-    # relative to the current directory. This is so that paths in
+    # Paths specified in configuration files starting with .rubocop are
+    # relative to the directory where that file is. Paths in other config files
+    # are relative to the current directory. This is so that paths in
     # config/default.yml, for example, are not relative to RuboCop's config
     # directory since that wouldn't work.
     def base_dir_for_path_parameters
-      config_files = [ConfigLoader::DOTFILE, ConfigLoader::AUTO_GENERATED_FILE]
       @base_dir_for_path_parameters ||=
-        if config_files.include?(File.basename(loaded_path)) &&
+        if File.basename(loaded_path).start_with?('.rubocop') &&
            loaded_path != File.join(Dir.home, ConfigLoader::DOTFILE)
           File.expand_path(File.dirname(loaded_path))
         else
@@ -294,6 +294,11 @@ module RuboCop
         else
           DEFAULT_RUBY_VERSION
         end
+    end
+
+    def target_rails_version
+      @target_rails_version ||=
+        for_all_cops.fetch('TargetRailsVersion', DEFAULT_RAILS_VERSION)
     end
 
     private

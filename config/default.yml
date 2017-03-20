@@ -82,6 +82,7 @@ AllCops:
   # Else if .ruby-version exists and it contains an MRI version it is used.
   # Otherwise we fallback to the oldest officially supported Ruby version (2.1).
   TargetRubyVersion: ~
+  TargetRailsVersion: 5.0
 
 # Indent private/protected/public as deep as method definitions
 Style/AccessModifierIndentation:
@@ -433,6 +434,8 @@ Style/EmptyLineBetweenDefs:
   # If `true`, this parameter means that single line method definitions don't
   # need an empty line between them.
   AllowAdjacentOneLineDefs: false
+  # Can be array to specify minimum and maximum number of empty lines, e.g. [1, 2]
+  NumberOfEmptyLines: 1
 
 Style/EmptyLinesAroundBlockBody:
   EnforcedStyle: no_empty_lines
@@ -472,6 +475,16 @@ Style/Encoding:
     - always
     - never
   AutoCorrectEncodingComment: '# encoding: utf-8'
+
+Style/EndOfLine:
+  # The `native` style means that CR+LF (Carriage Return + Line Feed) is
+  # enforced on Windows, and LF is enforced on other platforms. The other styles
+  # mean LF and CR+LF, respectively.
+  EnforcedStyle: native
+  SupportedStyles:
+    - native
+    - lf
+    - crlf
 
 Style/ExtraSpacing:
   # When true, allows most uses of extra spacing if the intent is to align
@@ -683,6 +696,37 @@ Style/IndentHash:
   # But it can be overridden by setting this parameter
   IndentationWidth: ~
 
+Style/IndentHeredoc:
+  EnforcedStyle: auto_detection
+  SupportedStyles:
+    - auto_detection
+    - squiggly
+    - active_support
+    - powerpack
+    - unindent
+
+Style/InverseMethods:
+  Enabled: true
+  # `InverseMethods` are methods that can be inverted by a not (`not` or `!`)
+  # The relationship of inverse methods only needs to be defined in one direction.
+  # Keys and values both need to be defined as symbols.
+  InverseMethods:
+    :any?: :none?
+    :even?: :odd?
+    :==: :!=
+    :=~: :!~
+    :<: :>=
+    :>: :<=
+    # `ActiveSupport` defines some common inverse methods. They are listed below,
+    # and not enabled by default.
+    #:present?: :blank?,
+    #:include?: :exclude?
+  # `InverseBlocks` are methods that are inverted by inverting the return
+  # of the block that is passed to the method
+  InverseBlocks:
+    :select: :reject
+    :select!: :reject!
+
 Style/Lambda:
   EnforcedStyle: line_count_dependent
   SupportedStyles:
@@ -703,6 +747,7 @@ Style/LambdaCall:
     - braces
 
 Style/MethodCallWithArgsParentheses:
+  IgnoreMacros: true
   IgnoredMethods: []
 
 Style/MethodDefParentheses:
@@ -717,6 +762,16 @@ Style/MethodName:
   SupportedStyles:
     - snake_case
     - camelCase
+
+# Checks the grouping of mixins (`include`, `extend`, `prepend`) in `class` and
+# `module` bodies.
+Style/MixinGrouping:
+  EnforcedStyle: separated
+  SupportedStyles:
+    # separated: each mixed in module goes in a separate statement.
+    # grouped: mixed in modules are grouped into a single statement.
+    - separated
+    - grouped
 
 Style/ModuleFunction:
   EnforcedStyle: module_function
@@ -762,6 +817,12 @@ Style/MultilineHashBraceLayout:
     - new_line
     - same_line
 
+Style/MultilineMemoization:
+  EnforcedStyle: keyword
+  SupportedStyles:
+    - keyword
+    - braces
+
 Style/MultilineMethodCallBraceLayout:
   EnforcedStyle: symmetrical
   SupportedStyles:
@@ -800,6 +861,16 @@ Style/MultilineOperationIndentation:
   # By default, the indentation width from `Style/IndentationWidth` is used
   # But it can be overridden by setting this parameter
   IndentationWidth: ~
+
+Style/NegatedIf:
+  EnforcedStyle: both
+  SupportedStyles:
+    # both: prefix and postfix negated `if` should both use `unless`
+    # prefix: only use `unless` for negated `if` statements positioned before the body of the statement
+    # postfix: only use `unless` for negated `if` statements positioned after the body of the statement
+    - both
+    - prefix
+    - postfix
 
 Style/Next:
   # With `always` all conditions at the end of an iteration needs to be
@@ -855,17 +926,12 @@ Style/ParenthesesAroundCondition:
   AllowSafeAssignment: true
 
 Style/PercentLiteralDelimiters:
+  # Specify the default preferred delimiter for all types with the 'default' key
+  # Override individual delimiters (even with default specified) by specifying
+  # an individual key
   PreferredDelimiters:
-    '%':  ()
-    '%i': ()
-    '%I': ()
-    '%q': ()
-    '%Q': ()
+    default: ()
     '%r': '{}'
-    '%s': ()
-    '%w': ()
-    '%W': ()
-    '%x': ()
 
 Style/PercentQLiterals:
   EnforcedStyle: lower_case_q

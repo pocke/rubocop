@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Team do
   subject(:team) { described_class.new(cop_classes, config, options) }
 
@@ -9,6 +7,39 @@ describe RuboCop::Cop::Team do
   let(:config) { RuboCop::ConfigLoader.default_configuration }
   let(:options) { nil }
   let(:ruby_version) { RuboCop::Config::KNOWN_RUBIES.last }
+
+  describe 'INCOMPATIBLE_COPS' do
+    include FileHelper
+
+    let(:options) { { formatters: [], auto_correct: true } }
+    let(:runner) { RuboCop::Runner.new(options, RuboCop::ConfigStore.new) }
+    let(:file_path) { 'example.rb' }
+
+    it 'auto corrects without SyntaxError', :isolated_environment do
+      source = <<-'END'.strip_indent
+        foo.map{ |a| a.nil? }
+
+        'foo' +
+          'bar' +
+          "#{baz}"
+
+        i=i+1
+      END
+      corrected = <<-'END'.strip_indent
+        foo.map(&:nil?)
+
+        'foo' \
+          'bar' \
+          "#{baz}"
+
+        i += 1
+      END
+
+      create_file(file_path, source)
+      runner.run([])
+      expect(File.read(file_path)).to eq(corrected)
+    end
+  end
 
   describe '#autocorrect?' do
     subject { team.autocorrect? }

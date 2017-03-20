@@ -26,6 +26,10 @@ module RuboCop
       @comment = comment
     end
 
+    def any?
+      frozen_string_literal_specified? || encoding_specified?
+    end
+
     # Does the magic comment enable the frozen string literal feature.
     #
     # Test whether the frozen string literal value is `true`. Cannot
@@ -42,7 +46,7 @@ module RuboCop
     #
     # @return [Boolean]
     def frozen_string_literal_specified?
-      !frozen_string_literal.nil?
+      specified?(frozen_string_literal)
     end
 
     # Expose the `frozen_string_literal` value coerced to a boolean if possible.
@@ -61,7 +65,15 @@ module RuboCop
       end
     end
 
+    def encoding_specified?
+      specified?(encoding)
+    end
+
     private
+
+    def specified?(value)
+      !value.nil?
+    end
 
     # Match the entire comment string with a pattern and take the first capture.
     #
@@ -109,11 +121,10 @@ module RuboCop
     #
     # @example Emacs style comment
     #   comment = RuboCop::MagicComment.parse(
-    #     '# -*- encoding: ASCII-8BIT; frozen_string_literal: true -*-'
+    #     '# -*- encoding: ASCII-8BIT -*-'
     #   )
     #
-    #   comment.encoding              # => 'ascii-8bit'
-    #   comment.frozen_string_literal # => true
+    #   comment.encoding # => 'ascii-8bit'
     #
     # @see https://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
     # @see https://git.io/vMCXh Emacs handling in Ruby's parse.y
@@ -179,7 +190,7 @@ module RuboCop
     class SimpleComment < MagicComment
       # Match `encoding` or `coding`
       def encoding
-        extract(/\b(?:en)?coding: (#{TOKEN})/)
+        extract(/\b(?:en)?coding: (#{TOKEN})/i)
       end
 
       private
@@ -188,8 +199,11 @@ module RuboCop
       #
       # The `frozen_string_literal` magic comment only works if it
       # is the only text in the comment.
+      #
+      # Case-insensitive and dashes/underscores are acceptable.
+      # @see https://git.io/vM7Mg
       def extract_frozen_string_literal
-        extract(/^#\s*frozen_string_literal:\s*(#{TOKEN})\s*$/)
+        extract(/\A#\s*frozen[_-]string[_-]literal:\s*(#{TOKEN})\s*\z/i)
       end
     end
   end

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::AST::HashNode do
   let(:hash_node) { parse_source(source).ast }
 
@@ -30,6 +28,26 @@ describe RuboCop::AST::HashNode do
 
       it { expect(hash_node.pairs.size).to eq(2) }
       it { expect(hash_node.pairs).to all(be_pair_type) }
+    end
+  end
+
+  describe '#empty?' do
+    context 'with an empty hash' do
+      let(:source) { '{}' }
+
+      it { expect(hash_node).to be_empty }
+    end
+
+    context 'with a hash containing pairs' do
+      let(:source) { '{ a: 1, b: 2 }' }
+
+      it { expect(hash_node).to_not be_empty }
+    end
+
+    context 'with a hash containing a keyword splat' do
+      let(:source) { '{ **foo }' }
+
+      it { expect(hash_node).to_not be_empty }
     end
   end
 

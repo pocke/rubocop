@@ -26,14 +26,15 @@ module RuboCop
       class UnreachableCode < Cop
         MSG = 'Unreachable code detected.'.freeze
 
-        NODE_TYPES = [:return, :next, :break, :retry, :redo].freeze
-        FLOW_COMMANDS = [:throw, :raise, :fail].freeze
+        NODE_TYPES = %i(return next break retry redo).freeze
+        FLOW_COMMANDS = %i(throw raise fail).freeze
 
         def on_begin(node)
           expressions = *node
 
           expressions.each_cons(2) do |e1, e2|
             next unless NODE_TYPES.include?(e1.type) || flow_command?(e1)
+
             add_offense(e2, :expression)
           end
         end
@@ -41,6 +42,8 @@ module RuboCop
         private
 
         def flow_command?(node)
+          return false unless node.send_type?
+
           FLOW_COMMANDS.any? { |c| node.command?(c) }
         end
       end
