@@ -93,9 +93,10 @@ task generate_cops_documentation: :yard do
       content << print_cop_with_doc(cop, config)
     end
     file_name = "#{Dir.pwd}/manual/cops_#{department.downcase}.md"
-    file = File.open(file_name, 'w')
-    puts "* generated #{file_name}"
-    file.write(content.strip + "\n")
+    File.open(file_name, 'w') do |file|
+      puts "* generated #{file_name}"
+      file.write(content.strip + "\n")
+    end
   end
 
   def print_cop_with_doc(cop, config)
@@ -173,5 +174,5 @@ task generate_cops_documentation: :yard do
 
   print_table_of_contents(cops)
 
-  assert_manual_synchronized if ENV['CI'] == 'true'
+  assert_manual_synchronized
 end
