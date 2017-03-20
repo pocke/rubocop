@@ -96,6 +96,8 @@ task generate_cops_documentation: :yard do
     File.open(file_name, 'w') do |file|
       puts "* generated #{file_name}"
       file.write(content.strip + "\n")
+      file.sync
+      file.close
     end
   end
 
