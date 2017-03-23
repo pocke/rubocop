@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::UnneededCapitalW do
   subject(:cop) { described_class.new }
 
@@ -40,6 +38,7 @@ describe RuboCop::Cop::Style::UnneededCapitalW do
               '  %W(\a)',
               '  %W(\s)',
               '  %W(\n)',
+              '  %W(\!)',
               'end']
     inspect_source(cop, source)
     expect(cop.offenses).to be_empty

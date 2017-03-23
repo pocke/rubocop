@@ -18,6 +18,7 @@ module RuboCop
     # 2.1 is the oldest officially supported Ruby version.
     DEFAULT_RUBY_VERSION = 2.1
     KNOWN_RUBIES = [1.9, 2.0, 2.1, 2.2, 2.3, 2.4].freeze
+    DEFAULT_RAILS_VERSION = 5.0
     OBSOLETE_COPS = {
       'Style/TrailingComma' =>
         'The `Style/TrailingComma` cop no longer exists. Please use ' \
@@ -27,7 +28,7 @@ module RuboCop
         'The `Rails/DefaultScope` cop no longer exists.',
       'Style/SingleSpaceBeforeFirstArg' =>
         'The `Style/SingleSpaceBeforeFirstArg` cop has been renamed to ' \
-        '`Style/SpaceBeforeFirstArg.`',
+        '`Style/SpaceBeforeFirstArg`.',
       'Lint/SpaceBeforeFirstArg' =>
         'The `Lint/SpaceBeforeFirstArg` cop has been removed, since it was a ' \
         'duplicate of `Style/SpaceBeforeFirstArg`. Please use ' \
@@ -96,7 +97,10 @@ module RuboCop
     def initialize(hash = {}, loaded_path = nil)
       @loaded_path = loaded_path
       @for_cop = Hash.new do |h, cop|
-        h[cop] = self[Cop::Cop.qualified_cop_name(cop, loaded_path)] || {}
+        qualified_cop_name = Cop::Cop.qualified_cop_name(cop, loaded_path)
+        cop_options = self[qualified_cop_name] || {}
+        cop_options['Enabled'] = enable_cop?(qualified_cop_name, cop_options)
+        h[cop] = cop_options
       end
       @hash = hash
     end
@@ -192,14 +196,6 @@ module RuboCop
       @for_all_cops ||= self['AllCops'] || {}
     end
 
-    def cop_enabled?(cop)
-      if (dept_config = self[cop.department.to_s])
-        return false if dept_config['Enabled'] == false
-      end
-
-      for_cop(cop).empty? || for_cop(cop).fetch('Enabled', true)
-    end
-
     def validate
       # Don't validate RuboCop's own files. Avoids infinite recursion.
       base_config_path = File.expand_path(File.join(ConfigLoader::RUBOCOP_HOME,
@@ -215,6 +211,7 @@ module RuboCop
       check_target_ruby
       validate_parameter_names(valid_cop_names)
       validate_enforced_styles(valid_cop_names)
+      reject_mutually_exclusive_defaults
     end
 
     def file_to_include?(file)
@@ -263,15 +260,14 @@ module RuboCop
       relative_path(path, base_dir_for_path_parameters)
     end
 
-    # Paths specified in .rubocop.yml and .rubocop_todo.yml files are relative
-    # to the directory where that file is. Paths in other config files are
-    # relative to the current directory. This is so that paths in
+    # Paths specified in configuration files starting with .rubocop are
+    # relative to the directory where that file is. Paths in other config files
+    # are relative to the current directory. This is so that paths in
     # config/default.yml, for example, are not relative to RuboCop's config
     # directory since that wouldn't work.
     def base_dir_for_path_parameters
-      config_files = [ConfigLoader::DOTFILE, ConfigLoader::AUTO_GENERATED_FILE]
       @base_dir_for_path_parameters ||=
-        if config_files.include?(File.basename(loaded_path)) &&
+        if File.basename(loaded_path).start_with?('.rubocop') &&
            loaded_path != File.join(Dir.home, ConfigLoader::DOTFILE)
           File.expand_path(File.dirname(loaded_path))
         else
@@ -294,6 +290,11 @@ module RuboCop
         else
           DEFAULT_RUBY_VERSION
         end
+    end
+
+    def target_rails_version
+      @target_rails_version ||=
+        for_all_cops.fetch('TargetRailsVersion', DEFAULT_RAILS_VERSION)
     end
 
     private
@@ -399,6 +400,29 @@ module RuboCop
       msg += "\nKnown versions: #{KNOWN_RUBIES.join(', ')}"
 
       raise ValidationError, msg
+    end
+
+    def reject_mutually_exclusive_defaults
+      disabled_by_default = for_all_cops['DisabledByDefault']
+      enabled_by_default = for_all_cops['EnabledByDefault']
+      return unless disabled_by_default && enabled_by_default
+
+      msg = 'Cops cannot be both enabled by default and disabled by default'
+      raise ValidationError, msg
+    end
+
+    def enable_cop?(qualified_cop_name, cop_options)
+      cop_department, cop_name = qualified_cop_name.split('/')
+      department = cop_name.nil?
+
+      unless department
+        department_options = self[cop_department]
+        if department_options && department_options.fetch('Enabled') == false
+          return false
+        end
+      end
+
+      cop_options.fetch('Enabled', true)
     end
   end
 end

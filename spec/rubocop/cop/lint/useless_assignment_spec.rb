@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Lint::UselessAssignment do
   subject(:cop) { described_class.new }
 
@@ -232,7 +230,7 @@ describe RuboCop::Cop::Lint::UselessAssignment do
       inspect_source(cop, source)
       expect(cop.offenses.size).to eq(1)
       expect(cop.offenses.first.message).to eq(
-        'Useless assignment to variable - `foo`. Use just operator `||`.'
+        'Useless assignment to variable - `foo`. Use `||` instead of `||=`.'
       )
       expect(cop.offenses.first.line).to eq(1)
       expect(cop.highlights).to eq(['foo'])
@@ -999,7 +997,7 @@ describe RuboCop::Cop::Lint::UselessAssignment do
       inspect_source(cop, source)
       expect(cop.offenses.size).to eq(1)
       expect(cop.offenses.first.message).to eq(
-        'Useless assignment to variable - `foo`. Use just operator `||`.'
+        'Useless assignment to variable - `foo`. Use `||` instead of `||=`.'
       )
       expect(cop.offenses.first.line).to eq(3)
       expect(cop.highlights).to eq(['foo'])

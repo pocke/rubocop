@@ -11,6 +11,9 @@ This cop enforces the consistent use of action filter methods.
 The cop is configurable and can enforce the use of the older
 something_filter methods or the newer something_action methods.
 
+If the TargetRailsVersion is set to less than 4.0, the cop will enforce
+the use of filter methods.
+
 ### Important attributes
 
 Attribute | Value
@@ -19,6 +22,30 @@ EnforcedStyle | action
 SupportedStyles | action, filter
 Include | app/controllers/\*\*/\*.rb
 
+## Rails/ActiveSupportAliases
+
+Enabled by default | Supports autocorrection
+--- | ---
+Enabled | Yes
+
+This cop checks that ActiveSupport aliases to core ruby methods
+are not used.
+
+### Example
+
+```ruby
+# good
+'some_string'.start_with?('prefix')
+'some_string'.end_with?('suffix')
+[1, 2, 'a'] << 'b'
+[1, 2, 'a'].unshift('b')
+
+# bad
+'some_string'.starts_with?('prefix')
+'some_string'.ends_with?('suffix')
+[1, 2, 'a'].append('b')
+[1, 2, 'a'].prepend('b')
+```
 
 ## Rails/Date
 
@@ -68,7 +95,6 @@ Attribute | Value
 --- | ---
 EnforcedStyle | flexible
 SupportedStyles | strict, flexible
-
 
 ## Rails/Delegate
 
@@ -163,7 +189,6 @@ Attribute | Value
 --- | ---
 Whitelist | find_by_sql
 
-
 ### References
 
 * [https://github.com/bbatsov/rails-style-guide#find_by](https://github.com/bbatsov/rails-style-guide#find_by)
@@ -198,7 +223,6 @@ Attribute | Value
 --- | ---
 Include | app/models/\*\*/\*.rb
 
-
 ## Rails/Exit
 
 Enabled by default | Supports autocorrection
@@ -225,7 +249,6 @@ Attribute | Value
 --- | ---
 Include | app/\*\*/\*.rb, config/\*\*/\*.rb, lib/\*\*/\*.rb
 Exclude | lib/\*\*/\*.rake
-
 
 ## Rails/FilePath
 
@@ -274,7 +297,6 @@ Attribute | Value
 --- | ---
 Include | app/models/\*\*/\*.rb
 
-
 ### References
 
 * [https://github.com/bbatsov/rails-style-guide#find_by](https://github.com/bbatsov/rails-style-guide#find_by)
@@ -304,7 +326,6 @@ Attribute | Value
 --- | ---
 Include | app/models/\*\*/\*.rb
 
-
 ### References
 
 * [https://github.com/bbatsov/rails-style-guide#find-each](https://github.com/bbatsov/rails-style-guide#find-each)
@@ -323,7 +344,6 @@ Attribute | Value
 --- | ---
 Include | app/models/\*\*/\*.rb
 
-
 ### References
 
 * [https://github.com/bbatsov/rails-style-guide#has-many-through](https://github.com/bbatsov/rails-style-guide#has-many-through)
@@ -336,9 +356,10 @@ Enabled | Yes
 
 This cop is used to identify usages of http methods like `get`, `post`,
 `put`, `patch` without the usage of keyword arguments in your tests and
-change them to use keyword args.  This cop only applies to Rails >= 5
-If you are not running Rails >=5 you should disable
-the Rails/HttpPositionalArguments cop.
+change them to use keyword args.  This cop only applies to Rails >= 5 .
+If you are not running Rails < 5 you should disable # the
+Rails/HttpPositionalArguments cop or set your TargetRailsVersion in your
+.rubocop.yml file to 4.0, etc.
 
 ### Example
 
@@ -355,7 +376,6 @@ get :new, params: { user_id: 1 }
 Attribute | Value
 --- | ---
 Include | spec/\*\*/\*, test/\*\*/\*
-
 
 ## Rails/NotNullColumn
 
@@ -386,7 +406,6 @@ Attribute | Value
 --- | ---
 Include | db/migrate/\*.rb
 
-
 ## Rails/Output
 
 Enabled by default | Supports autocorrection
@@ -400,7 +419,6 @@ This cop checks for the use of output calls like puts and print
 Attribute | Value
 --- | ---
 Include | app/\*\*/\*.rb, config/\*\*/\*.rb, db/\*\*/\*.rb, lib/\*\*/\*.rb
-
 
 ## Rails/OutputSafety
 
@@ -481,10 +499,34 @@ Attribute | Value
 --- | ---
 Include | app/models/\*\*/\*.rb
 
-
 ### References
 
 * [https://github.com/bbatsov/rails-style-guide#read-attribute](https://github.com/bbatsov/rails-style-guide#read-attribute)
+
+## Rails/RelativeDateConstant
+
+Enabled by default | Supports autocorrection
+--- | ---
+Enabled | Yes
+
+This cop checks whether constant value isn't relative date.
+Because the relative date will be evaluated only once.
+
+### Example
+
+```ruby
+# bad
+class SomeClass
+  EXPIRED_AT = 1.week.since
+end
+
+# good
+class SomeClass
+  def self.expired_at
+    1.week.since
+  end
+end
+```
 
 ## Rails/RequestReferer
 
@@ -501,7 +543,6 @@ Attribute | Value
 --- | ---
 EnforcedStyle | referer
 SupportedStyles | referer, referrer
-
 
 ## Rails/ReversibleMigration
 
@@ -605,7 +646,6 @@ Attribute | Value
 --- | ---
 Include | db/migrate/\*.rb
 
-
 ### References
 
 * [https://github.com/bbatsov/rails-style-guide#reversible-migration](https://github.com/bbatsov/rails-style-guide#reversible-migration)
@@ -661,7 +701,6 @@ target Ruby version is set to 2.3+
 Attribute | Value
 --- | ---
 ConvertTry | false
-
 
 ## Rails/SaveBang
 
@@ -733,7 +772,6 @@ Attribute | Value
 --- | ---
 Include | app/models/\*\*/\*.rb
 
-
 ## Rails/SkipsModelValidations
 
 Enabled by default | Supports autocorrection
@@ -768,7 +806,6 @@ user.update_attributes(website: 'example.com')
 Attribute | Value
 --- | ---
 Blacklist | decrement!, decrement_counter, increment!, increment_counter, toggle!, touch, update_all, update_attribute, update_column, update_columns, update_counters
-
 
 ### References
 
@@ -814,7 +851,6 @@ Attribute | Value
 --- | ---
 EnforcedStyle | flexible
 SupportedStyles | strict, flexible
-
 
 ### References
 
@@ -869,7 +905,6 @@ EnforcedStyle | conservative
 SupportedStyles | conservative, aggressive
 AutoCorrect | false
 
-
 ## Rails/Validation
 
 Enabled by default | Supports autocorrection
@@ -883,4 +918,3 @@ This cop checks for the use of old-style attribute validation macros.
 Attribute | Value
 --- | ---
 Include | app/models/\*\*/\*.rb
-

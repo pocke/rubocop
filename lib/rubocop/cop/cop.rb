@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'uri'
 
 module RuboCop
@@ -148,6 +149,10 @@ module RuboCop
 
       def target_ruby_version
         @config.target_ruby_version
+      end
+
+      def target_rails_version
+        @config.target_rails_version
       end
 
       def parse(source, path = nil)

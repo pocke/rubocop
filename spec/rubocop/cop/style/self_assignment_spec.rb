@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::SelfAssignment do
   subject(:cop) { described_class.new }
 
-  [:+, :-, :*, :**, :/, :|, :&].product(['x', '@x', '@@x']).each do |op, var|
+  %i(+ - * ** / | &).product(['x', '@x', '@@x']).each do |op, var|
     it "registers an offense for non-shorthand assignment #{op} and #{var}" do
       inspect_source(cop,
                      "#{var} = #{var} #{op} y")

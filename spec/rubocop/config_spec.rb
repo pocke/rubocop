@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Config do
   include FileHelper
 
@@ -224,6 +222,24 @@ describe RuboCop::Config do
         end
         expect { configuration.validate }
           .to raise_error(RuboCop::ValidationError, message_matcher)
+      end
+    end
+
+    context 'when all cops are both Enabled and Disabled by default' do
+      before do
+        create_file(configuration_path, [
+                      'AllCops:',
+                      '  EnabledByDefault: true',
+                      '  DisabledByDefault: true'
+                    ])
+      end
+
+      it 'raises validation error' do
+        expect { configuration.validate }
+          .to raise_error(
+            RuboCop::ValidationError,
+            /Cops cannot be both enabled by default and disabled by default/
+          )
       end
     end
   end
@@ -481,7 +497,11 @@ describe RuboCop::Config do
     end
   end
 
-  describe '#cop_enabled?' do
+  context 'whether the cop is enabled' do
+    def cop_enabled(cop_class)
+      configuration.for_cop(cop_class).fetch('Enabled')
+    end
+
     context 'when an entire cop department is disabled' do
       context 'but an individual cop is enabled' do
         let(:hash) do
@@ -493,7 +513,7 @@ describe RuboCop::Config do
 
         it 'still disables the cop' do
           cop_class = RuboCop::Cop::Style::TrailingWhitespace
-          expect(configuration.cop_enabled?(cop_class)).to be false
+          expect(cop_enabled(cop_class)).to be false
         end
       end
     end
@@ -509,7 +529,7 @@ describe RuboCop::Config do
 
         it 'still disables the cop' do
           cop_class = RuboCop::Cop::Style::TrailingWhitespace
-          expect(configuration.cop_enabled?(cop_class)).to be false
+          expect(cop_enabled(cop_class)).to be false
         end
       end
     end
@@ -523,7 +543,38 @@ describe RuboCop::Config do
 
       it 'enables the cop by default' do
         cop_class = RuboCop::Cop::Style::TrailingWhitespace
-        expect(configuration.cop_enabled?(cop_class)).to be true
+        expect(cop_enabled(cop_class)).to be true
+      end
+    end
+  end
+
+  describe '#target_rails_version' do
+    context 'when TargetRailsVersion is set' do
+      let(:rails_version) { 4.0 }
+
+      let(:hash) do
+        {
+          'AllCops' => {
+            'TargetRailsVersion' => rails_version
+          }
+        }
+      end
+
+      it 'uses TargetRailsVersion' do
+        expect(configuration.target_rails_version).to eq rails_version
+      end
+    end
+
+    context 'when TargetRailsVersion is not set' do
+      let(:hash) do
+        {
+          'AllCops' => {}
+        }
+      end
+
+      it 'uses the default rails version' do
+        default_version = RuboCop::Config::DEFAULT_RAILS_VERSION
+        expect(configuration.target_rails_version).to eq default_version
       end
     end
   end

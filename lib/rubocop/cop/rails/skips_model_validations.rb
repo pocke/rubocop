@@ -25,20 +25,37 @@ module RuboCop
       class SkipsModelValidations < Cop
         MSG = 'Avoid using `%s` because it skips validations.'.freeze
 
+        METHODS_WITH_ARGUMENTS = %w(decrement!
+                                    decrement_counter
+                                    increment!
+                                    increment_counter
+                                    toggle!
+                                    update_all
+                                    update_attribute
+                                    update_column
+                                    update_columns
+                                    update_counters).freeze
+
         def on_send(node)
-          _receiver, method_name = *node
+          return unless blacklist.include?(node.method_name.to_s)
 
-          return unless blacklist.include?(method_name.to_s)
+          _receiver, method_name, *args = *node
 
-          add_offense(node,
-                      node.loc.selector,
-                      format(MSG, method_name))
+          if METHODS_WITH_ARGUMENTS.include?(method_name.to_s) && args.empty?
+            return
+          end
+
+          add_offense(node, :selector)
         end
 
         private
 
+        def message(node)
+          format(MSG, node.method_name)
+        end
+
         def blacklist
-          cop_config['Blacklist']
+          cop_config['Blacklist'] || []
         end
       end
     end

@@ -40,14 +40,16 @@ module RuboCop
 
         MSG_CURRENT = 'Do not use `%s`. Use `Time.zone.now` instead.'.freeze
 
-        TIMECLASS = [:Time, :DateTime].freeze
+        TIMECLASS = %i(Time DateTime).freeze
 
-        DANGEROUS_METHODS = [:now, :local, :new, :strftime,
-                             :parse, :at, :current].freeze
+        GOOD_METHODS = %i(zone zone_default find_zone find_zone!).freeze
 
-        ACCEPTED_METHODS = [:in_time_zone, :utc, :getlocal,
-                            :iso8601, :jisx0301, :rfc3339,
-                            :to_i, :to_f].freeze
+        DANGEROUS_METHODS = %i(now local new strftime
+                               parse at current).freeze
+
+        ACCEPTED_METHODS = %i(in_time_zone utc getlocal
+                              iso8601 jisx0301 rfc3339
+                              to_i to_f).freeze
 
         def on_const(node)
           mod, klass = *node
@@ -127,25 +129,26 @@ module RuboCop
         end
 
         def safe_method(method_name, node)
-          _receiver, _method_name, *args = *node
           return method_name unless method_name == 'new'
 
-          if args.empty?
-            'now'
-          else
+          if node.arguments?
             'local'
+          else
+            'now'
           end
         end
 
         def check_localtime(node)
           selector_node = node
-          while !node.nil? && node.send_type?
+
+          while node && node.send_type?
             break if extract_method(node) == :localtime
             node = node.parent
           end
-          _receiver, _method, args = *node
 
-          add_offense(selector_node, :selector, MSG_LOCALTIME) if args.nil?
+          return if node.arguments?
+
+          add_offense(selector_node, :selector, MSG_LOCALTIME)
         end
 
         def danger_chain?(chain)
@@ -162,9 +165,9 @@ module RuboCop
 
         def good_methods
           if style == :strict
-            [:zone, :zone_default]
+            GOOD_METHODS
           else
-            [:zone, :zone_default, :current] + ACCEPTED_METHODS
+            GOOD_METHODS + [:current] + ACCEPTED_METHODS
           end
         end
 
@@ -186,8 +189,7 @@ module RuboCop
         # Example:
         # Time.new(1988, 3, 15, 3, 0, 0, "-05:00")
         def offset_provided?(node)
-          _, _, *args = *node
-          args.length >= 7
+          node.arguments.size >= 7
         end
       end
     end

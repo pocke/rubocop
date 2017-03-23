@@ -160,7 +160,11 @@ AllCops:
 # ...
 ```
 
-Files and directories are specified relative to the `.rubocop.yml` file.
+In `.rubocop.yml` and any other configuration file beginning with `.rubocop`,
+files and directories are specified relative to the directory where the
+configuration file is. In configuration files that don't begin with `.rubocop`,
+e.g. `our_company_defaults.yml`, paths are relative to the directory where
+`rubocop` is run.
 
 **Note**: Patterns that are just a file name, e.g. `Rakefile`, will match
 that file name in any directory, but this pattern style is deprecated. The
@@ -216,7 +220,7 @@ Metrics/LineLength:
 Most cops are enabled by default. Some cops, configured in
 [config/disabled.yml](https://github.com/bbatsov/rubocop/blob/master/config/disabled.yml),
 are disabled by default. The cop enabling process can be altered by
-setting `DisabledByDefault` to `true`.
+setting `DisabledByDefault` or `EnabledByDefault` (but not both) to `true`.
 
 ```yaml
 AllCops:
@@ -226,6 +230,14 @@ AllCops:
 All cops are then disabled by default, and only cops appearing in user
 configuration files are enabled. `Enabled: true` does not have to be
 set for cops in user configuration. They will be enabled anyway.
+
+```yaml
+AllCops:
+  EnabledByDefault: true
+```
+
+All cops are then enabled by default, and only cops explicitly disabled
+using `Enabled: false` in user configuration files are enabled.
 
 #### Severity
 

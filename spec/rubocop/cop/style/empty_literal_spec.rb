@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::EmptyLiteral do
   subject(:cop) { described_class.new }
 
@@ -28,6 +26,24 @@ describe RuboCop::Cop::Style::EmptyLiteral do
     it 'auto-corrects Array.new to []' do
       new_source = autocorrect_source(cop, 'test = Array.new')
       expect(new_source).to eq('test = []')
+    end
+
+    it 'auto-corrects Array.new in block in block' do
+      source = 'puts { Array.new }'
+      new_source = autocorrect_source(cop, source)
+      expect(new_source).to eq 'puts { [] }'
+    end
+
+    it 'does not registers an offense Array.new with block' do
+      source = 'test = Array.new { 1 }'
+      inspect_source(cop, source)
+      expect(cop.offenses).to be_empty
+    end
+
+    it 'does not register Array.new with block in other block' do
+      source = 'puts { Array.new { 1 } }'
+      inspect_source(cop, source)
+      expect(cop.offenses).to be_empty
     end
   end
 
@@ -59,6 +75,12 @@ describe RuboCop::Cop::Style::EmptyLiteral do
     it 'auto-corrects Hash.new to {}' do
       new_source = autocorrect_source(cop, 'Hash.new')
       expect(new_source).to eq('{}')
+    end
+
+    it 'auto-corrects Hash.new in block ' do
+      source = 'puts { Hash.new }'
+      new_source = autocorrect_source(cop, source)
+      expect(new_source).to eq 'puts { {} }'
     end
 
     it 'auto-corrects Hash.new to {} in various contexts' do

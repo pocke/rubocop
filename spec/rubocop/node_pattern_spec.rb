@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
 require 'parser/current'
 
 describe RuboCop::NodePattern do
@@ -702,7 +701,7 @@ describe RuboCop::NodePattern do
 
     context 'in a nested sequence' do
       let(:pattern) { '(send (send _ %2) %1)' }
-      let(:params) { [:inc, :dec] }
+      let(:params) { %i(inc dec) }
       let(:ruby) { '5.dec.inc' }
       it_behaves_like :matching
     end

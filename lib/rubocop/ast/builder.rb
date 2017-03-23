@@ -17,15 +17,18 @@ module RuboCop
         AndNode          => [:and],
         ArrayNode        => [:array],
         CaseNode         => [:case],
+        EnsureNode       => [:ensure],
         ForNode          => [:for],
         HashNode         => [:hash],
         IfNode           => [:if],
         KeywordSplatNode => [:kwsplat],
         OrNode           => [:or],
         PairNode         => [:pair],
-        UntilNode        => [:until, :until_post],
+        ResbodyNode      => [:resbody],
+        SendNode         => [:send],
+        UntilNode        => %i(until until_post),
         WhenNode         => [:when],
-        WhileNode        => [:while, :while_post]
+        WhileNode        => %i(while while_post)
       }.freeze
 
       # Generates {Node} from the given information.

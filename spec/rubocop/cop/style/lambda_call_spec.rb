@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::LambdaCall, :config do
   subject(:cop) { described_class.new(config) }
 
@@ -54,6 +52,11 @@ describe RuboCop::Cop::Style::LambdaCall, :config do
 
     it 'accepts x.()' do
       inspect_source(cop, 'x.(a, b)')
+      expect(cop.offenses).to be_empty
+    end
+
+    it 'accepts a call without receiver' do
+      inspect_source(cop, 'call(a, b)')
       expect(cop.offenses).to be_empty
     end
 

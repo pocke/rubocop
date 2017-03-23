@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Lint::MultipleCompare do
   let(:config) { RuboCop::Config.new }
   subject(:cop) { described_class.new(config) }
@@ -14,7 +12,7 @@ describe RuboCop::Cop::Lint::MultipleCompare do
       inspect_source(cop, bad_source)
       expect(cop.offenses.size).to eq(1)
       expect(cop.messages)
-        .to eq(['Use `&&` operator to compare multiple value.'])
+        .to eq(['Use the `&&` operator to compare multiple values.'])
     end
 
     it 'autocorrects' do

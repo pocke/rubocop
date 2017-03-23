@@ -1,12 +1,17 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::TernaryParentheses, :config do
   subject(:cop) { described_class.new(config) }
 
   before do
     inspect_source(cop, source)
+  end
+
+  let(:redundant_parens_enabled) { false }
+  let(:other_cops) do
+    {
+      'Style/RedundantParentheses' => { 'Enabled' => redundant_parens_enabled }
+    }
   end
 
   shared_examples 'code with offense' do |code, expected|
@@ -79,6 +84,10 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code with offense',
                       'foo = yield ? a : b',
                       'foo = (yield) ? a : b'
+
+      it_behaves_like 'code with offense',
+                      'foo = bar[:baz] ? a : b',
+                      'foo = (bar[:baz]) ? a : b'
     end
 
     context 'with a complex condition' do
@@ -134,6 +143,10 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code with offense',
                       'foo = (yield) ? a : b',
                       'foo = yield ? a : b'
+
+      it_behaves_like 'code with offense',
+                      'foo = (bar[:baz]) ? a : b',
+                      'foo = bar[:baz] ? a : b'
     end
 
     context 'with a complex condition' do
@@ -195,6 +208,12 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code without offense',
                       '(foo..bar).include?(baz) ? a : b'
     end
+
+    context 'with no space between the parentheses and question mark' do
+      it_behaves_like 'code with offense',
+                      '(foo)? a : b',
+                      'foo ? a : b'
+    end
   end
 
   context 'configured for parentheses on complex and there are parens' do
@@ -214,6 +233,10 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
       it_behaves_like 'code with offense',
                       'foo = (yield) ? a : b',
                       'foo = yield ? a : b'
+
+      it_behaves_like 'code with offense',
+                      'foo = (bar[:baz]) ? a : b',
+                      'foo = bar[:baz] ? a : b'
     end
 
     context 'with a complex condition' do
@@ -323,14 +346,12 @@ describe RuboCop::Cop::Style::TernaryParentheses, :config do
   end
 
   context 'when `RedundantParenthesis` would cause an infinite loop' do
-    let(:config) do
-      RuboCop::Config.new(
-        'Style/RedundantParentheses' => { 'Enabled' => true },
-        'Style/TernaryParentheses' => {
-          'EnforcedStyle' => 'require_parentheses',
-          'SupportedStyles' => %w(require_parentheses require_no_parentheses)
-        }
-      )
+    let(:redundant_parens_enabled) { true }
+    let(:cop_config) do
+      {
+        'EnforcedStyle' => 'require_parentheses',
+        'SupportedStyles' => %w(require_parentheses require_no_parentheses)
+      }
     end
 
     it_behaves_like 'code without offense',

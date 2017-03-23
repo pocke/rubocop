@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Performance::Detect do
   subject(:cop) { described_class.new(config) }
 
@@ -18,7 +16,7 @@ describe RuboCop::Cop::Performance::Detect do
 
   # rspec will not let you use a variable assigned using let outside
   # of `it`
-  select_methods = [:select, :find_all].freeze
+  select_methods = %i(select find_all).freeze
 
   select_methods.each do |method|
     it "registers an offense when first is called on #{method}" do

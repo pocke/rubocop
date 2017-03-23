@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 module RuboCop
   class Runner
     attr_writer :errors # Needed only for testing.
@@ -24,6 +22,7 @@ describe RuboCop::Runner, :isolated_environment do
     context 'if there are no offenses in inspected files' do
       let(:source) { <<-END.strip_indent }
         # coding: utf-8
+
         def valid_code; end
       END
 
@@ -35,6 +34,7 @@ describe RuboCop::Runner, :isolated_environment do
     context 'if there is an offense in an inspected file' do
       let(:source) { <<-END.strip_indent }
         # coding: utf-8
+
         def INVALID_CODE; end
       END
 
@@ -50,7 +50,7 @@ describe RuboCop::Runner, :isolated_environment do
 
           Offenses:
 
-          example.rb:2:5: C: Use snake_case for method names.
+          example.rb:3:5: C: Use snake_case for method names.
           def INVALID_CODE; end
               ^^^^^^^^^^^^
 
@@ -80,11 +80,18 @@ describe RuboCop::Runner, :isolated_environment do
     end
 
     context 'if -s/--stdin is used with an offense' do
+      before do
+        # Make Style/EndOfLine give same output regardless of platform.
+        create_file('.rubocop.yml', ['Style/EndOfLine:',
+                                     '  EnforcedStyle: lf'])
+      end
+
       let(:options) do
         {
           formatters: [['progress', formatter_output_path]],
           stdin: <<-END.strip_indent
             # coding: utf-8
+
             def INVALID_CODE; end
           END
         }
@@ -103,7 +110,7 @@ describe RuboCop::Runner, :isolated_environment do
 
           Offenses:
 
-          example.rb:2:5: C: Use snake_case for method names.
+          example.rb:3:5: C: Use snake_case for method names.
           def INVALID_CODE; end
               ^^^^^^^^^^^^
 

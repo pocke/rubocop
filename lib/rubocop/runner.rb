@@ -118,7 +118,7 @@ module RuboCop
     def add_unneeded_disables(file, offenses, source)
       if check_for_unneded_disables?(source)
         config = @config_store.for(file)
-        if config.cop_enabled?(Cop::Lint::UnneededDisable)
+        if config.for_cop(Cop::Lint::UnneededDisable).fetch('Enabled')
           cop = Cop::Lint::UnneededDisable.new(config, @options)
           if cop.relevant_file?(file)
             cop.check(offenses, source.disabled_line_ranges, source.comments)
@@ -261,7 +261,7 @@ module RuboCop
       @mobilized_cop_classes[config.object_id] ||= begin
         cop_classes = Cop::Cop.all
 
-        [:only, :except].each do |opt|
+        %i(only except).each do |opt|
           OptionsValidator.validate_cop_list(@options[opt])
         end
 

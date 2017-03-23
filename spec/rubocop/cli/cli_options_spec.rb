@@ -1,12 +1,13 @@
-# encoding: utf-8
 # frozen_string_literal: true
-
-require 'spec_helper'
 
 describe RuboCop::CLI, :isolated_environment do
   include_context 'cli spec behavior'
 
   subject(:cli) { described_class.new }
+
+  before(:each) do
+    RuboCop::ConfigLoader.default_configuration = nil
+  end
 
   describe '--list-target-files' do
     context 'when there are no files' do
@@ -23,6 +24,7 @@ describe RuboCop::CLI, :isolated_environment do
 
     context 'when there are some files' do
       before do
+        create_file('show.rabl2', 'object @user => :person')
         create_file('show.rabl', 'object @user => :person')
         create_file('app.rb', 'puts "hello world"')
         create_file('Gemfile', ['source "https://rubygems.org"',
@@ -34,7 +36,7 @@ describe RuboCop::CLI, :isolated_environment do
         it 'prints known ruby files' do
           cli.run ['-L']
           expect($stdout.string.split("\n")).to contain_exactly(
-            'app.rb', 'Gemfile', 'lib/helper.rb'
+            'app.rb', 'Gemfile', 'lib/helper.rb', 'show.rabl'
           )
         end
       end
@@ -45,13 +47,13 @@ describe RuboCop::CLI, :isolated_environment do
                                        '  Exclude:',
                                        '    - Gemfile',
                                        '  Include:',
-                                       '    - "**/*.rabl"'])
+                                       '    - "**/*.rabl2"'])
         end
 
         it 'prints the included files and not the excluded ones' do
           cli.run ['--list-target-files']
           expect($stdout.string.split("\n")).to contain_exactly(
-            'app.rb', 'lib/helper.rb', 'show.rabl'
+            'app.rb', 'lib/helper.rb', 'show.rabl', 'show.rabl2'
           )
         end
       end
@@ -717,6 +719,7 @@ describe RuboCop::CLI, :isolated_environment do
                                       'y ',
                                       'puts x'])
           create_file('example2.rb', ['# encoding: utf-8',
+                                      '',
                                       "\tx",
                                       'def a',
                                       '   puts',
@@ -749,18 +752,18 @@ describe RuboCop::CLI, :isolated_environment do
                     ' (column 0 instead of 1).',
                     '# encoding: utf-8',
                     '^^^^^^^^^^^^^^^^^',
-                    'example2.rb:2:1: C: Tab detected.',
+                    'example2.rb:3:1: C: Tab detected.',
                     "\tx",
                     '^',
-                    'example2.rb:2:2: C: Indentation of first line in file ' \
+                    'example2.rb:3:2: C: Indentation of first line in file ' \
                     'detected.',
                     "\tx",
                     ' ^',
-                    'example2.rb:3:1: C: Inconsistent indentation ' \
+                    'example2.rb:4:1: C: Inconsistent indentation ' \
                     'detected.',
                     'def a ...',
                     '^^^^^',
-                    'example2.rb:4:1: C: Use 2 (not 3) spaces for ' \
+                    'example2.rb:5:1: C: Use 2 (not 3) spaces for ' \
                     'indentation.',
                     '   puts',
                     '^^^',
@@ -789,25 +792,27 @@ describe RuboCop::CLI, :isolated_environment do
       context 'when emacs format is specified' do
         it 'outputs with emacs format' do
           create_file('example1.rb', ['# encoding: utf-8',
+                                      '',
                                       'x= 0 ',
                                       'y ',
                                       'puts x'])
           create_file('example2.rb', ['# encoding: utf-8',
+                                      '',
                                       "\tx = 0",
                                       'puts x'])
           expect(cli.run(['--format', 'emacs', 'example1.rb',
                           'example2.rb'])).to eq(1)
           expected_output =
-            ["#{abs('example1.rb')}:2:2: C: Surrounding space missing" \
+            ["#{abs('example1.rb')}:3:2: C: Surrounding space missing" \
              ' for operator `=`.',
-             "#{abs('example1.rb')}:2:5: C: Trailing whitespace detected.",
-             "#{abs('example1.rb')}:3:2: C: Trailing whitespace detected.",
+             "#{abs('example1.rb')}:3:5: C: Trailing whitespace detected.",
+             "#{abs('example1.rb')}:4:2: C: Trailing whitespace detected.",
              "#{abs('example2.rb')}:1:1: C: Incorrect indentation detected" \
              ' (column 0 instead of 1).',
-             "#{abs('example2.rb')}:2:1: C: Tab detected.",
-             "#{abs('example2.rb')}:2:2: C: Indentation of first line in " \
+             "#{abs('example2.rb')}:3:1: C: Tab detected.",
+             "#{abs('example2.rb')}:3:2: C: Indentation of first line in " \
              'file detected.',
-             "#{abs('example2.rb')}:3:1: C: Inconsistent indentation " \
+             "#{abs('example2.rb')}:4:1: C: Inconsistent indentation " \
              'detected.',
              ''].join("\n")
           expect($stdout.string).to eq(expected_output)
@@ -996,19 +1001,34 @@ describe RuboCop::CLI, :isolated_environment do
   end
 
   describe '--force-exclusion' do
-    let(:target_file) { 'example.rb' }
+    context 'when explicitely excluded' do
+      let(:target_file) { 'example.rb' }
 
-    before do
-      create_file(target_file, '#' * 90)
+      before do
+        create_file(target_file, '#' * 90)
 
-      create_file('.rubocop.yml', ['AllCops:',
-                                   '  Exclude:',
-                                   "    - #{target_file}"])
+        create_file('.rubocop.yml', ['AllCops:',
+                                     '  Exclude:',
+                                     "    - #{target_file}"])
+      end
+
+      it 'excludes files specified in the configuration Exclude ' \
+         'even if they are explicitly passed as arguments' do
+        expect(cli.run(['--force-exclusion', target_file])).to eq(0)
+      end
     end
 
-    it 'excludes files specified in the configuration Exclude ' \
-       'even if they are explicitly passed as arguments' do
-      expect(cli.run(['--force-exclusion', target_file])).to eq(0)
+    context 'with already excluded by default' do
+      let(:target_file) { 'TODO.md' }
+
+      before do
+        create_file(target_file, '- one')
+      end
+
+      it 'excludes files excluded by default even if they are ' \
+         'explicitly passed as arguments' do
+        expect(cli.run(['--force-exclusion', target_file])).to eq(0)
+      end
     end
   end
 
@@ -1092,6 +1112,9 @@ describe RuboCop::CLI, :isolated_environment do
     it 'detects CR at end of line' do
       begin
         create_file('example.rb', "puts 'hello world'\r")
+        # Make Style/EndOfLine give same output regardless of platform.
+        create_file('.rubocop.yml', ['Style/EndOfLine:',
+                                     '  EnforcedStyle: lf'])
         File.open('example.rb') do |file|
           # We must use a File object to simulate the behavior of
           # STDIN, which is an IO object. StringIO won't do in this

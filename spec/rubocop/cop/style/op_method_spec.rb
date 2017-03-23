@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::OpMethod do
   subject(:cop) { described_class.new }
 
-  [:+, :eql?, :equal?].each do |op|
+  %i(+ eql? equal?).each do |op|
     it "registers an offense for #{op} with arg not named other" do
       inspect_source(cop,
                      ["def #{op}(another)",

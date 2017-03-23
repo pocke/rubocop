@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Lint::EmptyEnsure do
   subject(:cop) { described_class.new }
 
@@ -12,6 +10,20 @@ describe RuboCop::Cop::Lint::EmptyEnsure do
                     'ensure',
                     'end'])
     expect(cop.offenses.size).to eq(1)
+  end
+
+  it 'autocorrects for empty ensure' do
+    corrected = autocorrect_source(cop,
+                                   ['begin',
+                                    '  something',
+                                    'ensure',
+                                    'end'])
+    expect(corrected).to eq([
+      'begin',
+      '  something',
+      '',
+      'end'
+    ].join("\n"))
   end
 
   it 'does not register an offense for non-empty ensure' do

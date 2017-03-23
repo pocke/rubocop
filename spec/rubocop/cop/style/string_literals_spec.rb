@@ -1,7 +1,4 @@
-# encoding: utf-8
 # frozen_string_literal: true
-
-require 'spec_helper'
 
 describe RuboCop::Cop::Style::StringLiterals, :config do
   subject(:cop) { described_class.new(config) }
@@ -299,15 +296,16 @@ describe RuboCop::Cop::Style::StringLiterals, :config do
         }
       end
 
-      it 'does not crash on strings with line breaks in them' do
+      it 'registers an offense for strings with line breaks in them' do
         inspect_source(cop,
                        ['"--',
                         'SELECT *',
                         'LEFT JOIN X on Y',
                         'FROM Models"'])
-        # TODO: We should actually get an offense report here telling us to use
-        # single quotes. For now, we only check that we don't crash.
-        expect(cop.offenses).to be_empty
+        expect(cop.offenses.size).to eq(1)
+        expect(cop.messages).to eq(['Prefer single-quoted strings when you ' \
+                                    "don't need string interpolation or " \
+                                    'special symbols.'])
       end
 
       it 'accepts continued strings using all single quotes' do
@@ -342,6 +340,18 @@ describe RuboCop::Cop::Style::StringLiterals, :config do
 
       it "doesn't register offense for double quotes with embedded single" do
         inspect_source(cop, ['"abc\'" \\',
+                             '"def"'])
+        expect(cop.offenses).to be_empty
+      end
+
+      it 'accepts for double quotes with an escaped special character' do
+        inspect_source(cop, ['"abc\\t" \\',
+                             '"def"'])
+        expect(cop.offenses).to be_empty
+      end
+
+      it 'accepts for double quotes with an escaped normal character' do
+        inspect_source(cop, ['"abc\\!" \\',
                              '"def"'])
         expect(cop.offenses).to be_empty
       end

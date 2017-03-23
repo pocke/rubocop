@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::MethodCallWithArgsParentheses, :config do
   subject(:cop) { described_class.new(config) }
   let(:cop_config) do
@@ -81,5 +79,35 @@ describe RuboCop::Cop::Style::MethodCallWithArgsParentheses, :config do
   it 'ignores method listed in IgnoredMethods' do
     inspect_source(cop, 'puts :test')
     expect(cop.offenses).to be_empty
+  end
+
+  context 'when inspecting macro methods' do
+    let(:cop_config) do
+      { 'IgnoreMacros' => 'true' }
+    end
+
+    context 'in a class body' do
+      it 'does not register an offense' do
+        inspect_source(cop, [
+          'class Foo',
+          '  bar :baz',
+          'end'
+        ].join("\n"))
+
+        expect(cop.offenses).to be_empty
+      end
+    end
+
+    context 'in a module body' do
+      it 'does not register an offense' do
+        inspect_source(cop, [
+          'module Foo',
+          '  bar :baz',
+          'end'
+        ].join("\n"))
+
+        expect(cop.offenses).to be_empty
+      end
+    end
   end
 end

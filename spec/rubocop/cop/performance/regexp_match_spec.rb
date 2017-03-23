@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Performance::RegexpMatch, :config do
   subject(:cop) { described_class.new(config) }
 
@@ -96,6 +94,7 @@ describe RuboCop::Cop::Performance::RegexpMatch, :config do
 
     %w(
       $& $' $` $~ $1 $2 $100
+      $MATCH
       Regexp.last_match Regexp.last_match(1)
     ).each do |var|
       include_examples :accepts, "#{name} in method with `#{var}`", <<-END

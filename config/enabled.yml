@@ -217,26 +217,42 @@ Style/EmptyLineBetweenDefs:
 
 Style/EmptyLines:
   Description: "Don't use several empty lines in a row."
+  StyleGuide: '#two-or-more-empty-lines'
   Enabled: true
 
 Style/EmptyLinesAroundAccessModifier:
   Description: "Keep blank lines around access modifiers."
+  StyleGuide: '#empty-lines-around-access-modifier'
+  Enabled: true
+
+Style/EmptyLinesAroundBeginBody:
+  Description: "Keeps track of empty lines around begin-end bodies."
+  StyleGuide: '#empty-lines-around-bodies'
   Enabled: true
 
 Style/EmptyLinesAroundBlockBody:
   Description: "Keeps track of empty lines around block bodies."
+  StyleGuide: '#empty-lines-around-bodies'
   Enabled: true
 
 Style/EmptyLinesAroundClassBody:
   Description: "Keeps track of empty lines around class bodies."
+  StyleGuide: '#empty-lines-around-bodies'
+  Enabled: true
+
+Style/EmptyLinesAroundExceptionHandlingKeywords:
+  Description: "Keeps track of empty lines around exception handling keywords."
+  StyleGuide: '#empty-lines-around-bodies'
   Enabled: true
 
 Style/EmptyLinesAroundModuleBody:
   Description: "Keeps track of empty lines around module bodies."
+  StyleGuide: '#empty-lines-around-bodies'
   Enabled: true
 
 Style/EmptyLinesAroundMethodBody:
   Description: "Keeps track of empty lines around method bodies."
+  StyleGuide: '#empty-lines-around-bodies'
   Enabled: true
 
 Style/EmptyLiteral:
@@ -374,9 +390,20 @@ Style/IndentHash:
   Description: 'Checks the indentation of the first key in a hash literal.'
   Enabled: true
 
+Style/IndentHeredoc:
+  Description: 'This cops checks the indentation of the here document bodies.'
+  StyleGuide: '#squiggly-heredocs'
+  Enabled: true
+
 Style/InfiniteLoop:
   Description: 'Use Kernel#loop for infinite loops.'
   StyleGuide: '#infinite-loop'
+  Enabled: true
+
+Style/InverseMethods:
+  Description: >-
+                 Use the inverse method instead of `!.method`
+                 if an inverse method is defined.
   Enabled: true
 
 Style/Lambda:
@@ -424,6 +451,11 @@ Style/MethodName:
 Style/MethodMissing:
   Description: 'Avoid using `method_missing`.'
   StyleGuide: '#no-method-missing'
+  Enabled: true
+
+Style/MixinGrouping:
+  Description: 'Checks for grouping of mixins in `class` and `module` bodies.'
+  StyleGuide: '#mixin-grouping'
   Enabled: true
 
 Style/ModuleFunction:
@@ -531,6 +563,11 @@ Style/NestedParenthesizedCalls:
 Style/NestedTernaryOperator:
   Description: 'Use one expression per branch in a ternary operator.'
   StyleGuide: '#no-nested-ternary'
+  Enabled: true
+
+Style/EmptyLineAfterMagicComment:
+  Description: 'Add a newline after magic comments to separate them from code.'
+  StyleGuide: '#separate-magic-comments-from-code'
   Enabled: true
 
 Style/Next:
@@ -855,6 +892,11 @@ Style/StructInheritance:
   StyleGuide: '#no-extend-struct-new'
   Enabled: true
 
+Style/SymbolArray:
+  Description: 'Use %i or %I for arrays of symbols.'
+  StyleGuide: '#percent-i'
+  Enabled: true
+
 Style/SymbolLiteral:
   Description: 'Use plain symbols instead of string symbols when possible.'
   Enabled: true
@@ -1022,6 +1064,13 @@ Metrics/PerceivedComplexity:
 #################### Lint ##################################
 ### Warnings
 
+Lint/AmbiguousBlockAssociation:
+  Description: >-
+                 Checks for ambiguous block association with method when param passed without
+                 parentheses.
+  StyleGuide: '#syntax'
+  Enabled: true
+
 Lint/AmbiguousOperator:
   Description: >-
                  Checks for ambiguous operators in the first argument of a
@@ -1090,6 +1139,7 @@ Lint/ElseLayout:
 Lint/EmptyEnsure:
   Description: 'Checks for empty ensure block.'
   Enabled: true
+  AutoCorrect: false
 
 Lint/EmptyExpression:
   Description: 'Checks for empty expressions.'
@@ -1465,6 +1515,13 @@ Rails/ActionFilter:
   Description: 'Enforces consistent use of action filter methods.'
   Enabled: true
 
+Rails/ActiveSupportAliases:
+  Description: >-
+                  Avoid ActiveSupport aliases of standard ruby methods:
+                  `String#starts_with?`, `String#ends_with?`,
+                  `Array#append`, `Array#prepend`.
+  Enabled: true
+
 Rails/Date:
   Description: >-
                   Checks the correct usage of date aware methods,
@@ -1542,6 +1599,10 @@ Rails/ReadWriteAttribute:
                  Checks for read_attribute(:attr) and
                  write_attribute(:attr, val).
   StyleGuide: 'https://github.com/bbatsov/rails-style-guide#read-attribute'
+  Enabled: true
+
+Rails/RelativeDateConstant:
+  Description: 'Do not assign relative date to constants.'
   Enabled: true
 
 Rails/RequestReferer:

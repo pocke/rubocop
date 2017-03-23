@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Rails::FilePath do
   subject(:cop) { described_class.new }
 
@@ -36,6 +34,24 @@ describe RuboCop::Cop::Rails::FilePath do
     let(:source) { '"#{Rails.root}/app/models/goober"' }
 
     it 'registers an offense' do
+      inspect_source(cop, source)
+      expect(cop.offenses.size).to eq(1)
+    end
+  end
+
+  context 'Rails.root is used as a method argument' do
+    let(:source) { 'foo(bar(File.join(Rails.root, "app", "models")))' }
+
+    it 'registers an offense once' do
+      inspect_source(cop, source)
+      expect(cop.offenses.size).to eq(1)
+    end
+  end
+
+  context 'Rails.root.join used as an argument' do
+    let(:source) { 'foo(Rails.root.join(\'app/models\'))' }
+
+    it 'registers an offense once' do
       inspect_source(cop, source)
       expect(cop.offenses.size).to eq(1)
     end

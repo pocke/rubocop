@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::CaseIndentation do
   subject(:cop) { described_class.new(config) }
   let(:config) do
@@ -15,6 +13,15 @@ describe RuboCop::Cop::Style::CaseIndentation do
     context 'with IndentOneStep: false' do
       let(:cop_config) do
         { 'EnforcedStyle' => 'case', 'IndentOneStep' => false }
+      end
+
+      context 'with everything on a single line' do
+        let(:source) { 'case foo; when :bar then 1; else 0; end' }
+
+        it 'does not register an offense' do
+          inspect_source(cop, source)
+          expect(cop.offenses).to be_empty
+        end
       end
 
       context 'regarding assignment where the right hand side is a case' do
@@ -237,6 +244,15 @@ describe RuboCop::Cop::Style::CaseIndentation do
         { 'EnforcedStyle' => 'case', 'IndentOneStep' => true }
       end
 
+      context 'with everything on a single line' do
+        let(:source) { 'case foo; when :bar then 1; else 0; end' }
+
+        it 'does not register an offense' do
+          inspect_source(cop, source)
+          expect(cop.offenses).to be_empty
+        end
+      end
+
       let(:correct_source) do
         ['output = case variable',
          "           when 'value1'",
@@ -367,6 +383,15 @@ describe RuboCop::Cop::Style::CaseIndentation do
         { 'EnforcedStyle' => 'end', 'IndentOneStep' => false }
       end
 
+      context 'with everything on a single line' do
+        let(:source) { 'case foo; when :bar then 1; else 0; end' }
+
+        it 'does not register an offense' do
+          inspect_source(cop, source)
+          expect(cop.offenses).to be_empty
+        end
+      end
+
       let(:correct_source) do
         ['output = case variable',
          "when 'value1'",
@@ -417,6 +442,15 @@ describe RuboCop::Cop::Style::CaseIndentation do
     context 'with IndentOneStep: true' do
       let(:cop_config) do
         { 'EnforcedStyle' => 'end', 'IndentOneStep' => true }
+      end
+
+      context 'with everything on a single line' do
+        let(:source) { 'case foo; when :bar then 1; else 0; end' }
+
+        it 'does not register an offense' do
+          inspect_source(cop, source)
+          expect(cop.offenses).to be_empty
+        end
       end
 
       let(:correct_source) do

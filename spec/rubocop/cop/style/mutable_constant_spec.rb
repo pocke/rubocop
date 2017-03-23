@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-
 describe RuboCop::Cop::Style::MutableConstant do
   subject(:cop) { described_class.new }
 
@@ -92,6 +90,11 @@ describe RuboCop::Cop::Style::MutableConstant do
     it 'adds brackets when auto-correcting' do
       new_source = autocorrect_source(cop, 'XXX = YYY, ZZZ')
       expect(new_source).to eq 'XXX = [YYY, ZZZ].freeze'
+    end
+
+    it 'does not add brackets to %w() arrays' do
+      new_source = autocorrect_source(cop, 'XXX = %w(YYY ZZZ)')
+      expect(new_source).to eq 'XXX = %w(YYY ZZZ).freeze'
     end
   end
 

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'yard'
 require 'rubocop'
 
@@ -29,7 +30,8 @@ task generate_cops_documentation: :yard do
   def properties(config, cop)
     content = "Enabled by default | Supports autocorrection\n".dup
     content << "--- | ---\n"
-    default_status = config.cop_enabled?(cop) ? 'Enabled' : 'Disabled'
+    enabled_by_default = config.for_cop(cop).fetch('Enabled')
+    default_status = enabled_by_default ? 'Enabled' : 'Disabled'
     supports_autocorrect = cop.new.support_autocorrect? ? 'Yes' : 'No'
     content << "#{default_status} | #{supports_autocorrect}"
     content
@@ -63,16 +65,15 @@ task generate_cops_documentation: :yard do
     content << "Attribute | Value\n"
     content << "--- | ---\n"
     pars.each do |par|
-      content << "#{par.first} | #{format_table_value(par.last)}\n"
+      content << "#{par.first} |#{format_table_value(par.last)}\n"
     end
-    content << "\n"
     content
   end
 
   def format_table_value(v)
     value = v.is_a?(Array) ? v.join(', ') : v.to_s
-    value.gsub("#{Dir.pwd}/", '')
-         .gsub('*', '\*')
+    value = value.gsub("#{Dir.pwd}/", '').gsub('*', '\*')
+    " #{value}".rstrip
   end
 
   def references(config, cop)
@@ -95,7 +96,7 @@ task generate_cops_documentation: :yard do
     file_name = "#{Dir.pwd}/manual/cops_#{department.downcase}.md"
     file = File.open(file_name, 'w')
     puts "* generated #{file_name}"
-    file.write(content)
+    file.write(content.strip + "\n")
   end
 
   def print_cop_with_doc(cop, config)
