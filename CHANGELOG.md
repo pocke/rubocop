@@ -76,6 +76,7 @@
 * [#3001](https://github.com/bbatsov/rubocop/issues/3001): Add configuration to `Lint/MissingCopEnableDirective` cop. ([@tdeo][])
 * [#4932](https://github.com/bbatsov/rubocop/issues/4932): Do not fail if configuration contains `Lint/Syntax` cop with the same settings as the default. ([@tdeo][])
 * [#5175](https://github.com/bbatsov/rubocop/pull/5175): Make Style/RedundantBegin aware of do-end block in Ruby 2.5. ([@pocke][])
+* [#3998](https://github.com/bbatsov/rubocop/issues/3998): Do not auto-correct `Security/YAMLLoad` by default. ([@NobodysNightmare][])
 
 ## 0.51.0 (2017-10-18)
 
