@@ -98,10 +98,9 @@ task generate_cops_documentation: :yard_for_generate_documentation do
       content << print_cop_with_doc(cop, config)
     end
     file_name = "#{Dir.pwd}/manual/cops_#{department.downcase}.md"
-    File.open(file_name, 'w') do |file|
-      puts "* generated #{file_name}"
-      file.write(content.strip + "\n")
-    end
+    file = File.open(file_name, 'w')
+    puts "* generated #{file_name}"
+    file.write(content.strip + "\n")
   end
 
   def print_cop_with_doc(cop, config)
