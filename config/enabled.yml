@@ -1264,6 +1264,10 @@ Lint/InvalidCharacterLiteral:
                  whitespace character.
   Enabled: true
 
+Lint/LitInCond:
+  Description: 'Checks of literals used in conditions.'
+  Enabled: true
+
 Lint/LiteralInCondition:
   Description: 'Checks of literals used in conditions.'
   Enabled: true
