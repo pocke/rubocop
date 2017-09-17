@@ -8,12 +8,11 @@ module RuboCop
         MSG = 'Do not use a literal in condition'.freeze
 
         def_node_matcher :lit_in_cond?, <<-PATTERN
-          (if int ...)
+          (if $int ...)
         PATTERN
 
         def on_if(node)
-          lit_in_cond?(node) do
-            cond = node.children.first
+          lit_in_cond?(node) do |cond|
             add_offense(cond)
           end
         end
