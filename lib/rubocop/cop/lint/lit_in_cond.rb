@@ -7,9 +7,13 @@ module RuboCop
       class LitInCond < Cop
         MSG = 'Do not use a literal in condition'.freeze
 
+        def_node_matcher :lit_in_cond?, <<-PATTERN
+          (if int ...)
+        PATTERN
+
         def on_if(node)
-          cond = node.children.first
-          if cond.type == :int
+          lit_in_cond?(node) do
+            cond = node.children.first
             add_offense(cond)
           end
         end
